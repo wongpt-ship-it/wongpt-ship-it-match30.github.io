@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三十周年火柴大挑戰</title>
+    <title>三十週年：火柴智多星</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -111,18 +111,18 @@
                 id: 1,
                 title: "熱身題",
                 instruction: "移動 1 根火柴，使等式成立",
-                formula: "6 + 4 = 4",
-                hint1: "結果的 4 是不需要變動的，試著把 6 變成其他數字。",
-                hint2: "把 6 的左下角火柴移到中間，變成 0。",
+                formula: "5 + 5 = 8",
+                hint1: "8 不需要變動，試著改變其中一個 5。",
+                hint2: "把第一個 5 的左上角火柴移到右上角，變成 3。",
                 layout: [
-                    { type: 'digit', value: 6, x: 50 },
-                    { type: 'op', value: '+', x: 180 },
-                    { type: 'digit', value: 4, x: 280 },
-                    { type: 'op', value: '=', x: 410 },
-                    { type: 'digit', value: 4, x: 510 }
+                    { type: 'digit', value: 5, x: 0 },
+                    { type: 'op', value: '+', x: 130 },
+                    { type: 'digit', value: 5, x: 230 },
+                    { type: 'op', value: '=', x: 360 },
+                    { type: 'digit', value: 8, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values) => values[0] + values[2] === values[4] // 0 + 4 = 4
+                check: (values) => values[0] + values[2] === values[4] // 3 + 5 = 8
             },
             {
                 id: 2,
@@ -131,27 +131,15 @@
                 formula: "8 + 3 = 5", // Invalid
                 hint1: "試試看改變運算符號。",
                 hint2: "把 8 中間的火柴移到 5 的缺口變成 9，8 變成 0? 不對。試試 9-3=6? 試試 8-3=5。",
-                // Wait, 8-3=5 requires moving 1 stick from (+) to make it (-) and putting it somewhere?
-                // Actually 9-3=6 is 1 move? 8->9 (needs 1), 5->6 (needs 1). No.
-                // Let's use: 9 + 3 = 5 -> 3 + 2 = 5 (Move 2? No).
-                // Let's use: 8 - 5 = 3 is valid.
-                // Target: 9 - 5 = 8 (Move 1). 
-                // Formula: 9 - 5 = 8. Move 1 to make 3 + 5 = 8? 
-                // Move 9->3 (1 stick), - -> + (1 stick). That's 2 moves within the same group?
-                // Let's go with simpler: 5 + 5 = 8 -> 3 + 5 = 8 (Move 1? No 5->3 is remove top-left, add top-right. 2 moves).
-                // Classic: 6 + 4 = 4 (Done).
-                // 1 + 1 = 5? -> 4 + 1 = 5? (1->4 needs 2).
-                // How about 7 - 1 = 1 -> 1 + 1 = 2 (Too many moves).
-                // Let's use: 3 + 3 = 8 -> 5 + 3 = 8 (Move 1 stick: 3->5 is 1 move: top-right to top-left).
                 formula: "3 + 3 = 8",
                 hint1: "8 很大，不需要變動。嘗試把其中一個 3 變大。",
                 hint2: "把第一個 3 的右上角火柴移到左上角，變成 5。",
                 layout: [
-                    { type: 'digit', value: 3, x: 50 },
-                    { type: 'op', value: '+', x: 180 },
-                    { type: 'digit', value: 3, x: 280 },
-                    { type: 'op', value: '=', x: 410 },
-                    { type: 'digit', value: 8, x: 510 }
+                    { type: 'digit', value: 3, x: 0 },
+                    { type: 'op', value: '+', x: 130 },
+                    { type: 'digit', value: 3, x: 230 },
+                    { type: 'op', value: '=', x: 360 },
+                    { type: 'digit', value: 8, x: 460 }
                 ],
                 maxMoves: 1,
                 check: (values) => values[0] + values[2] === values[4] // 5 + 3 = 8
@@ -161,35 +149,18 @@
                 title: "減法挑戰",
                 instruction: "移動 1 根火柴，使等式成立",
                 formula: "9 - 5 = 8", 
-                // 9-5=4. 
-                // Target: 6+5=11? No.
-                // 8-5=3? 9->8 (1 move? No, 9 is 6 segs, 8 is 7. Need add).
-                // 5+5=0? No.
-                // How about: 8 - 9 = 5 -> -1? No.
-                // Let's try: 8 + 3 = 11 (2 digits result).
-                // Let's try: 9 + 6 = 13?
-                // Puzzle: 14 - 7 = 1? -> 14 - 7 = 7 (Move 1 -> 1 to make 7? No).
-                // Puzzle: 7 + 1 = 1. (Move 1). -> 1 - 1 = 0? (7->1 remove 2. No).
-                // Back to basics: 
-                // 6 - 4 = 4 (Invalid).
-                // Correct is 8 - 4 = 4. (6->8 add 1). Where from? - -> +? 8+4 != 4.
-                // How about 0 + 4 = 4. (6->0 is move 1). Wait we did that in LV1.
-                // Let's do: 5 + 7 = 2 -> 9 - 7 = 2. (5->9 add 1. + -> - take 1. Total 1 move).
                 formula: "5 + 7 = 2",
                 hint1: "加法變減法？",
                 hint2: "把加號的一根火柴移到 5 上，讓它變成 9。",
                 layout: [
-                    { type: 'digit', value: 5, x: 50 },
-                    { type: 'op', value: '+', x: 180 },
-                    { type: 'digit', value: 7, x: 280 },
-                    { type: 'op', value: '=', x: 410 },
-                    { type: 'digit', value: 2, x: 510 }
+                    { type: 'digit', value: 5, x: 0 },
+                    { type: 'op', value: '+', x: 130 },
+                    { type: 'digit', value: 7, x: 230 },
+                    { type: 'op', value: '=', x: 360 },
+                    { type: 'digit', value: 2, x: 460 }
                 ],
                 maxMoves: 1,
                 check: (values, ops) => {
-                     // Need to check operators too here since one changed
-                     // But our simple check assumes structure. We need to detect op change.
-                     // The game logic will parse the sticks to determine current values and ops.
                      return values[0] - values[2] === values[4];
                 }
             },
@@ -198,21 +169,14 @@
                 title: "數字變身",
                 instruction: "移動 1 根火柴，使等式成立",
                 formula: "9 + 3 = 6", 
-                // Target: 3 + 3 = 6 (9->3 move 1? 9(6 segs) -> 3(5 segs). Remove 1. Where? 6->8? 3+3=8. No).
-                // 5 + 3 = 8? (9->5 move 1. 6->8 move ?).
-                // How about 8 - 3 = 5. (9->8 add 1? No).
-                // Let's use: 0 + 3 = 3? (9->0 move 1? 9 has mid, 0 no mid. 9 has no bot-left, 0 has. Yes, move mid to bot-left).
-                // So 9+3=6 -> 0+3=3? No 6!=3.
-                // 9-3=6. (+ -> -). Where does the stick go? 6->8. 9-3=6 -> 9-3=6 is correct.
-                // Start: 9 + 3 = 6. Move + to 6 -> 8. Result 9 - 3 = 6. Correct.
                 hint1: "結果 6 似乎少了一根火柴。",
                 hint2: "把加號的一根火柴移到 6 上，變成 8，並讓運算變成減法。",
                 layout: [
-                    { type: 'digit', value: 9, x: 50 },
-                    { type: 'op', value: '+', x: 180 },
-                    { type: 'digit', value: 3, x: 280 },
-                    { type: 'op', value: '=', x: 410 },
-                    { type: 'digit', value: 6, x: 510 }
+                    { type: 'digit', value: 9, x: 0 },
+                    { type: 'op', value: '+', x: 130 },
+                    { type: 'digit', value: 3, x: 230 },
+                    { type: 'op', value: '=', x: 360 },
+                    { type: 'digit', value: 6, x: 460 }
                 ],
                 maxMoves: 1,
                 check: (values) => values[0] - values[2] === values[4] // 9 - 3 = 6
@@ -222,16 +186,14 @@
                 title: "無中生有",
                 instruction: "移動 1 根火柴，使等式成立",
                 formula: "3 + 9 = 6",
-                // 3 + 3 = 6. (9->3 move 1? 9 is 6 segs, 3 is 5. Remove 1. Where? 6->8. 3+3=8? No).
-                // How about 3 + 5 = 8. (9->5 move 1: top-right to top-left? No 9 has top-left. 9(TR,TL,T,M,B,BR). 5(T,TL,M,BR,B). 9->5 is remove TR. Place somewhere. 6->8. 3+5=8. Correct).
                 hint1: "試著把 9 變成 5。",
                 hint2: "把 9 的右上角火柴移到 6 的缺口，變成 8。",
                 layout: [
-                    { type: 'digit', value: 3, x: 50 },
-                    { type: 'op', value: '+', x: 180 },
-                    { type: 'digit', value: 9, x: 280 },
-                    { type: 'op', value: '=', x: 410 },
-                    { type: 'digit', value: 6, x: 510 }
+                    { type: 'digit', value: 3, x: 0 },
+                    { type: 'op', value: '+', x: 130 },
+                    { type: 'digit', value: 9, x: 230 },
+                    { type: 'op', value: '=', x: 360 },
+                    { type: 'digit', value: 6, x: 460 }
                 ],
                 maxMoves: 1,
                 check: (values) => values[0] + values[2] === values[4] // 3 + 5 = 8
@@ -242,18 +204,16 @@
                 title: "三十而立 (一)",
                 instruction: "移動 1 根火柴，使結果等於 30",
                 formula: "26 + 4 = 20",
-                // Target: 26 + 4 = 30.
-                // Move 1 from 20 -> 30. (2->3). 2 is [0,2,3,4,6], 3 is [0,2,3,5,6]. Move 4(bot-left) to 5(bot-right).
                 hint1: "題目要求結果是 30，看看答案部分。",
                 hint2: "把答案 20 的 2 變成 3。移動左下角的火柴到右下角。",
                 layout: [
-                    { type: 'digit', value: 2, x: 50 },
-                    { type: 'digit', value: 6, x: 130 },
-                    { type: 'op', value: '+', x: 240 },
-                    { type: 'digit', value: 4, x: 320 },
-                    { type: 'op', value: '=', x: 430 },
-                    { type: 'digit', value: 2, x: 530 },
-                    { type: 'digit', value: 0, x: 610 }
+                    { type: 'digit', value: 2, x: 0 },
+                    { type: 'digit', value: 6, x: 80 },
+                    { type: 'op', value: '+', x: 190 },
+                    { type: 'digit', value: 4, x: 270 },
+                    { type: 'op', value: '=', x: 380 },
+                    { type: 'digit', value: 2, x: 480 },
+                    { type: 'digit', value: 0, x: 560 }
                 ],
                 maxMoves: 1,
                 check: (values) => (values[0]*10 + values[1]) + values[2] === 30 // 26 + 4 = 30
@@ -263,19 +223,16 @@
                 title: "三十而立 (二)",
                 instruction: "移動 1 根火柴，使結果等於 30",
                 formula: "36 - 6 = 36",
-                // Target: 36 - 6 = 30.
-                // Move 36 (answer) -> 30. 6->0. Move mid to bot-left?
-                // 6 [0,1,3,4,5,6], 0 [0,1,2,4,5,6]. No, 6->0 is move Middle to Top-Right.
                 hint1: "36 減 6 應該等於多少？",
                 hint2: "把答案 36 的 6 中間那根火柴移到右上角，變成 0。",
                 layout: [
-                    { type: 'digit', value: 3, x: 50 },
-                    { type: 'digit', value: 6, x: 130 },
-                    { type: 'op', value: '-', x: 240 },
-                    { type: 'digit', value: 6, x: 320 },
-                    { type: 'op', value: '=', x: 430 },
-                    { type: 'digit', value: 3, x: 530 },
-                    { type: 'digit', value: 6, x: 610 }
+                    { type: 'digit', value: 3, x: 0 },
+                    { type: 'digit', value: 6, x: 80 },
+                    { type: 'op', value: '-', x: 190 },
+                    { type: 'digit', value: 6, x: 270 },
+                    { type: 'op', value: '=', x: 380 },
+                    { type: 'digit', value: 3, x: 480 },
+                    { type: 'digit', value: 6, x: 560 }
                 ],
                 maxMoves: 1,
                 check: (values) => (values[0]*10 + values[1]) - values[2] === 30
@@ -284,98 +241,56 @@
                 id: 8,
                 title: "三十而立 (三)",
                 instruction: "移動 2 根火柴，做出 30",
-                formula: "18 + 12 = 38",
-                // Target: 18 + 12 = 30.
-                // 38 -> 30. 8->0 is remove middle. 1 move.
-                // But instruction says move 2? Let's make it Move 1.
-                // Wait, 18+12=30 is correct mathematically.
-                // So we just need to change result 38 to 30. 8->0 is 1 move (remove middle). Where does it go?
-                // Just remove? No, standard rule is rearrange.
-                // 18 + 12 = 30. 8->0 (1 stick). Where to put?
-                // Make 18 -> 18? No. 
-                // Make 12 -> 18? (2->8 need 2 sticks).
-                // Let's try: 15 + 15 = 38 -> 15 + 15 = 30. (8->0 remove mid. Put where? 5->9? 15+19=34. No).
-                // Let's try: 35 - 5 = 39 -> 35 - 5 = 30. (9->0 add 1 stick? No 9->0 is move mid to bot-left. 1 move).
-                // So 35-5=39 (invalid). Target 35-5=30. Move 9->0 (Mid -> Bot-left).
                 formula: "35 - 5 = 39",
                 hint1: "35 減 5 應該是 30。",
                 hint2: "把 39 的 9 變成 0。移動中間的火柴到左下角。",
                 layout: [
-                    { type: 'digit', value: 3, x: 50 },
-                    { type: 'digit', value: 5, x: 130 },
-                    { type: 'op', value: '-', x: 240 },
-                    { type: 'digit', value: 5, x: 320 },
-                    { type: 'op', value: '=', x: 430 },
-                    { type: 'digit', value: 3, x: 530 },
-                    { type: 'digit', value: 9, x: 610 }
+                    { type: 'digit', value: 3, x: 0 },
+                    { type: 'digit', value: 5, x: 80 },
+                    { type: 'op', value: '-', x: 190 },
+                    { type: 'digit', value: 5, x: 270 },
+                    { type: 'op', value: '=', x: 380 },
+                    { type: 'digit', value: 3, x: 480 },
+                    { type: 'digit', value: 9, x: 560 }
                 ],
                 maxMoves: 1,
                 check: (values) => (values[0]*10 + values[1]) - values[2] === 30
             },
             {
                 id: 9,
-                title: "三十周年 (四)",
+                title: "三十週年 (四)",
                 instruction: "移動 1 根火柴，使等式成立",
                 formula: "39 - 9 = 36", // 30
-                // 39-9=30. 
-                // 36->30. 6->0 is move mid to top-right.
                 hint1: "這是一條簡單的減法。",
                 hint2: "把 36 的 6 變成 0。",
                 layout: [
-                    { type: 'digit', value: 3, x: 50 },
-                    { type: 'digit', value: 9, x: 130 },
-                    { type: 'op', value: '-', x: 240 },
-                    { type: 'digit', value: 9, x: 320 },
-                    { type: 'op', value: '=', x: 430 },
-                    { type: 'digit', value: 3, x: 530 },
-                    { type: 'digit', value: 6, x: 610 }
+                    { type: 'digit', value: 3, x: 0 },
+                    { type: 'digit', value: 9, x: 80 },
+                    { type: 'op', value: '-', x: 190 },
+                    { type: 'digit', value: 9, x: 270 },
+                    { type: 'op', value: '=', x: 380 },
+                    { type: 'digit', value: 3, x: 480 },
+                    { type: 'digit', value: 6, x: 560 }
                 ],
                 maxMoves: 1,
                 check: (values) => (values[0]*10 + values[1]) - values[2] === 30
             },
             {
                 id: 10,
-                title: "三十周年 (終極)",
+                title: "三十週年 (終極)",
                 instruction: "移動 2 根火柴，使等式成立",
                 formula: "11 + 19 = 80",
-                // Target: 11 + 19 = 30.
-                // 80 -> 30. 8->3.
-                // 8 is all 7. 3 is [0,2,3,5,6]. Remove 1(TL) and 4(BL).
-                // We have 2 sticks removed.
-                // Where to put? Maybe we don't need to put them back if we 'remove' them?
-                // Prompt says "Move". Usually implies conservation of mass.
-                // Let's find a conservation puzzle.
-                // 25 + 5 = 30.
-                // Start: 25 + 5 = 80? (3->8 needs 2).
-                // Let's try 5 * 6 = 30.
-                // Start 6 * 5 = 30?
-                // Let's do: 30 + 0 = 30.
-                // Start: 38 - 8 = 30.
-                // Start: 38 - 8 = 38. (Move 1: 38->30. 8->0 is 1 remove? No 8->0 is remove mid. 1 stick floating).
-                // Let's go back to: 14 + 16 = 30.
-                // Puzzle: 74 - 44 = 30.
-                // Puzzle: 30 = 30.
-                // Let's try a tricky one: make the number 30 from "38". (Remove sticks?).
-                // Let's stick to the prompt's implied mechanics: Move sticks.
-                // 6 + 24 = 30.
-                // Start: 5 + 25 = 30.
-                // Let's try: 15 + 15 = 30.
-                // Start: 19 - 4 = 15? No.
-                // Let's do: 15 + 15 = 50. (5->3 is 1 move? 5 to 3: Move TL to BR? No 5 has BR. 5 is T,TL,M,BR,B. 3 is T,TR,M,BR,B. Move TL to TR. 1 move. 5->3).
-                // So 15 + 15 = 50 -> 15 + 15 = 30. 
-                // 50 -> 30. 5->3. Move TL to TR.
-                // Perfect.
                 hint1: "15 加 15 等於多少？",
                 hint2: "把答案 50 的 5 變成 3。將左上角的火柴移到右上角。",
                 layout: [
-                    { type: 'digit', value: 1, x: 50 },
-                    { type: 'digit', value: 5, x: 130 },
-                    { type: 'op', value: '+', x: 240 },
-                    { type: 'digit', value: 1, x: 320 },
-                    { type: 'digit', value: 5, x: 400 },
-                    { type: 'op', value: '=', x: 510 },
-                    { type: 'digit', value: 5, x: 610 },
-                    { type: 'digit', value: 0, x: 690 }
+                    { type: 'digit', value: 1, x: 0 },
+                    { type: 'digit', value: 5, x: 80 },
+                    { type: 'op', value: '+', x: 190 },
+                    { type: 'digit', value: 1, x: 270 },
+                    { type: 'digit', value: 5, x: 350 },
+                    { type: 'op', value: '=', x: 460 },
+                    { type: 'digit', value: 5, x: 560 },
+                    { type: 'digit', value: 0, x: 640 }
                 ],
                 maxMoves: 1,
                 check: (values) => (values[0]*10 + values[1]) + (values[2]*10 + values[3]) === 30
@@ -389,8 +304,29 @@
             let slots = []; // Places where sticks CAN go (ghost slots)
             let idCounter = 0;
 
+            // --- Auto Centering Logic ---
+            // 1. Calculate content bounds
+            let minX = Infinity;
+            let maxX = -Infinity;
+            
+            // Basic check for bounds based on parts
+            // Digits are approx 100 wide, Ops are approx 60-100 wide.
+            // Let's iterate through layout to find exact bounds
+            levelData.layout.forEach(part => {
+                if (part.x < minX) minX = part.x;
+                // Estimate width: Digit ~110px (0-90 + 20pad), Op ~60px
+                const width = part.type === 'digit' ? 110 : 80; 
+                if (part.x + width > maxX) maxX = part.x + width;
+            });
+
+            const contentWidth = maxX - minX;
+            const containerWidth = 800; // The fixed width of the logic container
+            const startOffset = (containerWidth - contentWidth) / 2;
+            const shiftX = startOffset - minX;
+            // -----------------------------
+
             levelData.layout.forEach((part, partIndex) => {
-                let baseX = part.x;
+                let baseX = part.x + shiftX; // Apply shift here
                 let baseY = 100; // Center Y vertically roughly
                 
                 if (part.type === 'digit') {
@@ -422,20 +358,10 @@
                 } else if (part.type === 'op') {
                     // Operations
                     let positions = part.value === '+' ? OP_PLUS : (part.value === '-' ? OP_MINUS : OP_EQUAL);
-                    // Special handling: Minus can become Plus (needs vertical slot ghost)
-                    // Plus can become Minus (needs vertical slot ghost)
-                    // Equal usually stays equal but could technically change? Let's assume structure fixed for ops mainly,
-                    // EXCEPT: Minus <-> Plus is a common trope.
-                    // So if it's + or -, generate BOTH slots (horiz and vert).
                     
                     if (part.value === '+' || part.value === '-') {
                          OP_PLUS.forEach((pos, segIndex) => {
                             const slotId = `slot_${partIndex}_${segIndex}`;
-                            // Check if this segment exists in current value
-                            // Plus: has both index 0 (vert) and 1 (horiz) in OP_PLUS array order?
-                            // My OP_PLUS: 0=Vert, 1=Horiz.
-                            // OP_MINUS: 0=Horiz.
-                            // Let's standardize: 0=Vert, 1=Horiz.
                             
                             // Let's manually define slots for +/-
                             // Vert slot
@@ -582,10 +508,6 @@
 
                     if (gameAreaRef.current) {
                         const rect = gameAreaRef.current.getBoundingClientRect();
-                        // Calculate position relative to game area
-                        // Apply scaling factor if game area is scaled? Assuming 1:1 for now or responsive css handles it
-                        // We need the raw coordinates inside the relative container
-                        
                         setMousePos({
                             x: clientX - rect.left - dragOffset.x,
                             y: clientY - rect.top - dragOffset.y
@@ -622,10 +544,6 @@
                 
                 if (gameAreaRef.current) {
                     const rect = gameAreaRef.current.getBoundingClientRect();
-                    // Offset logic to grab stick exactly where clicked
-                    // Current stick logic draws at x,y.
-                    // Click happened at clientX.
-                    // Stick is at rect.left + x.
                     const offsetX = clientX - (rect.left + stickX);
                     const offsetY = clientY - (rect.top + stickY);
                     
@@ -650,7 +568,7 @@
                     // Check if slot is occupied by ANOTHER stick
                     const isOccupied = sticks.some(s => s.slotId === slot.id && s.id !== stickId);
                     
-                    // Check rotation match? Usually horizontal stick goes to horiz slot.
+                    // Check rotation match? usually horizontal stick goes to horiz slot.
                     // Let's enforce rotation match for simplicity, otherwise it looks weird
                     const rotDiff = Math.abs(currentStick.rotation - slot.rotation);
                     const isRotMatch = rotDiff < 10 || rotDiff > 350; // approx equal
@@ -665,8 +583,6 @@
                     // Update stick position
                     const newSticks = sticks.map(s => {
                         if (s.id === stickId) {
-                            // If slot changed, increment move count (half move? logic: pick up and drop different place)
-                            // We can just count every drop to a NEW slot as a move
                             if (s.slotId !== nearest.id) {
                                 setMovesCount(prev => prev + 1);
                             }
@@ -688,8 +604,6 @@
 
             const checkWinCondition = (currentSticks) => {
                 // Parse the board
-                // Map sticks to slots, slots to parts
-                // 1. Group filled slots by partIndex
                 const filledSlots = {}; // { partIndex: [segIdx, segIdx...] }
                 
                 currentSticks.forEach(s => {
@@ -706,7 +620,7 @@
 
                 // 2. Decode parts
                 const decodedValues = [];
-                const decodedOps = []; // Not really used in logic validation except implicit order
+                const decodedOps = []; 
                 
                 let isMalformed = false;
 
@@ -717,8 +631,6 @@
                         // Find match in DIGIT_MAP
                         let digit = -1;
                         Object.entries(DIGIT_MAP).forEach(([key, val]) => {
-                            // Arrays compare
-                            // Sort both
                             const a = [...val].sort();
                             const b = [...segments].sort();
                             if (JSON.stringify(a) === JSON.stringify(b)) digit = parseInt(key);
@@ -727,14 +639,9 @@
                         else isMalformed = true;
                     } else if (part.type === 'op') {
                         if (part.value === '=') {
-                            // Equals must have 2 lines usually top/bottom. 
-                            // My slots: 0(top), 1(bot).
                             if (segments.length === 2) { /* ok */ }
-                            else isMalformed = true; // Strict equal sign?
+                            else isMalformed = true; 
                         } else {
-                            // + or -
-                            // + needs vert and horiz
-                            // - needs horiz
                             const hasVert = segments.includes('vert');
                             const hasHoriz = segments.includes('horiz');
                             
@@ -746,28 +653,14 @@
                 });
 
                 if (!isMalformed) {
-                    // We only extract DIGIT values for the check function
-                    // The operations are assumed to be in the same order usually, OR we handle logic changes
-                    // The level.check function currently expects [d1, d2, d3] etc.
-                    // Ops changes are tricky. For levels where op changes (level 3, 4), we need to handle it.
-                    // Let's pass (values, ops) to check?
-                    
-                    // Simple hack: Assume layout order is Digit Op Digit = Digit
-                    // Values array will contain [d1, d2, d3]
-                    // Ops check logic inside check() if needed, or check() just does math
-                    // But if Op changed from + to -, the math changes.
-                    // Let's reconstruct the equation string and eval it? safer.
-                    
                     try {
                         if (currentLevel.check(decodedValues, decodedOps)) {
                             setGameState('won');
-                            // Play sound
                             const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg');
                             audio.volume = 0.5;
                             audio.play().catch(e=>{});
                         }
                     } catch (e) {
-                        // Index out of bounds if missing digits
                     }
                 }
             };
@@ -776,7 +669,7 @@
                 if (currentLevelIdx < LEVELS.length - 1) {
                     setCurrentLevelIdx(prev => prev + 1);
                 } else {
-                    alert("恭喜！你已完成所有關卡！30周年快樂！");
+                    alert("恭喜！你已完成所有關卡！30週年快樂！");
                     setCurrentLevelIdx(0);
                 }
             };
@@ -786,10 +679,10 @@
                     {/* Header */}
                     <div className="w-full flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-lg border-2 border-orange-200">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-orange-600">三十周年火柴大挑戰</h1>
+                            <h1 className="text-2xl md:text-3xl font-bold text-orange-600">三十週年：火柴智多星</h1>
                             <div className="flex items-center gap-2 mt-1">
-                                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-bold">关卡 {currentLevelIdx + 1}/10</span>
-                                {currentLevelIdx >= 5 && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-bold">30周年特別題</span>}
+                                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm font-bold">關卡 {currentLevelIdx + 1}/10</span>
+                                {currentLevelIdx >= 5 && <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-bold">30週年特別題</span>}
                             </div>
                         </div>
                         <div className="text-right">
@@ -907,17 +800,11 @@
                             >
                                 🔄 重置本關
                             </button>
-                            {/* Debug Skip */}
-                            {/* <button 
-                                onClick={nextLevel} 
-                                className="flex-1 bg-red-50 text-red-300 text-xs"
-                            >Skip (Debug)</button> 
-                            */}
                         </div>
                     </div>
                     
                     <div className="mt-8 text-center text-gray-400 text-xs">
-                        慶祝30周年校慶活動專用
+                        慶祝30週年校慶活動專用
                     </div>
                 </div>
             );
