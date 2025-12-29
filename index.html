@@ -16,7 +16,7 @@
         body {
             font-family: 'Fredoka', sans-serif;
             touch-action: none; /* Prevent scrolling on iPad while dragging */
-            background-color: #d8d4c7; /* Softer, slightly vintage background */
+            background-color: #d8d4c7;
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden; /* Prevent body scroll */
@@ -96,6 +96,27 @@
         const OP_MINUS = [[10, 80, 0]];
         const OP_EQUAL = [[10, 65, 0], [10, 95, 0]];
 
+        // --- VALIDATION HELPER ---
+        // Generic checker for A +/- B = C or A +/- B = C +/- D
+        const checkMath = (values, ops) => {
+            if (values.length === 3 && ops.length === 1) {
+                // A op B = C
+                const res = ops[0] === '+' ? values[0] + values[1] : values[0] - values[1];
+                return res === values[2];
+            } 
+            if (values.length === 5 && ops.length === 1) {
+                // Double digit math (implicit 2 digits per number usually in this game's logic for 30th)
+                // Actually the parser flattens digits.
+                // e.g. 26 + 4 = 20 -> values [2,6, 4, 2,0]
+                // Construct numbers based on context? 
+                // The levels have fixed structure. We can try to interpret based on length.
+                // But for 30th anniversary, it's mostly Double +/- Single = Double.
+                // Let's rely on specific level checks for complex ones, but generic for simple ones.
+                return false;
+            }
+            return false;
+        };
+
         // --- POOLS ---
 
         // 1. Math Pool
@@ -104,37 +125,41 @@
                 id: 'm1', type: 'math', title: "熱身題", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 5 = 8",
                 hint1: "8 不需要變動，試著改變其中一個 5。", hint2: "把第一個 5 的左上角火柴移到右上角，變成 3。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
-                check: (values) => values.length === 3 && values[0] + values[1] === values[2]
+                check: (values, ops) => checkMath(values, ops)
             },
             {
                 id: 'm2', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "9 + 3 = 6",
-                hint1: "試著把加法變成減法。", hint2: "把加號的一根火柴移到 6 上，變成 8。",
+                hint1: "嘗試把 9 變小。", hint2: "把 9 的左上角火柴移到 6 的缺口，讓它變成 8。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 3, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 6, x: 460 }],
-                check: (values, ops) => values.length === 3 && ops[0] === '-' && values[0] - values[1] === values[2]
+                // Target: 5 + 3 = 8
+                check: (values, ops) => checkMath(values, ops)
             },
             {
                 id: 'm3', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
-                hint1: "這是不可能的...除非改變 6。", hint2: "把 6 的左上角移到中間，變成 0。",
+                hint1: "這題有多個解法！試試把加號變減號？", hint2: "解法一：8 - 4 = 4。解法二：0 + 4 = 4。",
                 layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 4, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 4, x: 460 }],
-                check: (values) => values.length === 3 && values[0] + values[1] === values[2]
+                // Supports 0+4=4 AND 8-4=4
+                check: (values, ops) => checkMath(values, ops)
             },
             {
-                id: 'm4', type: 'math', title: "經典挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "9 + 9 = 0", // Answer: 9-9=0
-                hint1: "加法變減法？", hint2: "把加號的直火柴拿走，變成減號，放到 0 上變成 8。",
-                layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 9, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 0, x: 460 }],
-                check: (values, ops) => values.length === 3 && values[0] - values[1] === values[2]
+                id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
+                // Replaced 9+9=0 with a solid one. Target: 3 + 5 = 8.
+                hint1: "減法變加法？", hint2: "把 9 變成 3，減號變加號。",
+                layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
+                check: (values, ops) => checkMath(values, ops)
             },
             {
-                id: 'm5', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
+                id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
                 hint1: "加法變減法？", hint2: "把加號的一根火柴移到 5 上，讓它變成 9。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
-                check: (values, ops) => values.length === 3 && ops[0] === '-' && values[0] - values[1] === values[2]
+                check: (values, ops) => checkMath(values, ops) // 9 - 7 = 2
             },
             {
-                id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3", // Answer: 9-6=3
-                hint1: "3 變大一點？", hint2: "把加號變成減號，把直的那根放到 3 上變成 9。",
+                id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
+                hint1: "試試看 3 加 0。", hint2: "把 6 變成 0。",
                 layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
-                check: (values, ops) => values.length === 3 && ops[0] === '-' && values[0] - values[1] === values[2]
+                // Supports 3+0=3 AND 9-6=3
+                check: (values, ops) => checkMath(values, ops)
             }
         ];
 
@@ -144,111 +169,60 @@
                 id: 's1', type: 'shape', title: "游動的小魚", instruction: "移動 3 根火柴，讓魚向反方向游",
                 formula: "圖形題",
                 hint1: "魚頭現在向左，要把它變向右。", hint2: "移動魚鰭和下半部的身體。",
-                // Layout: Fish Facing Left
                 customSticks: [
-                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, // Fins (Left side)
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, // Body top/bot
-                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, // Body sides (L/R)
-                    {x:400, y:100, r:45}, {x:400, y:160, r:135} // Tail (Right side)
+                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, 
+                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, 
+                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, 
+                    {x:400, y:100, r:45}, {x:400, y:160, r:135} 
                 ],
-                // Target: Fish Facing Right (Fins on right, Tail on left)
-                // Just check specific key sticks
                 winSlots: [
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, // Body same
-                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, // Body same
-                    {x:400, y:80, r:135}, {x:400, y:180, r:45}, // Fins (Right side now)
-                    {x:300, y:100, r:135}, {x:300, y:160, r:45} // Tail (Left side now)
+                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, 
+                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, 
+                    {x:400, y:80, r:135}, {x:400, y:180, r:45}, 
+                    {x:300, y:100, r:135}, {x:300, y:160, r:45} 
                 ],
-                // We provide valid slots for user to drop
                 validSlots: [
-                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, // L Fins
-                    {x:400, y:80, r:135}, {x:400, y:180, r:45}, // R Fins
-                    {x:400, y:100, r:45}, {x:400, y:160, r:135}, // R Tail
-                    {x:300, y:100, r:135}, {x:300, y:160, r:45}, // L Tail
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, // Body
-                    {x:320, y:130, r:90}, {x:380, y:130, r:90} // Body
+                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, {x:400, y:80, r:135}, {x:400, y:180, r:45}, 
+                    {x:400, y:100, r:45}, {x:400, y:160, r:135}, {x:300, y:100, r:135}, {x:300, y:160, r:45}, 
+                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, {x:320, y:130, r:90}, {x:380, y:130, r:90} 
                 ]
             },
             {
                 id: 's2', type: 'shape', title: "兩個箭頭", instruction: "移動 2 根火柴，把兩個箭頭變成一個正方形",
                 formula: "圖形題",
                 hint1: "將兩個箭頭的尾部連起來。", hint2: "這是一個視錯覺，不需要完美的正方形，長方形(Box)也可以。",
-                // Layout: > >
                 customSticks: [
-                    // Arrow 1 (Left)
-                    {x:200, y:100, r:45}, {x:200, y:160, r:135}, // < Shape? No, > shape.
-                    // > shape means point is Right. Top stick \, Bot stick /.
-                    // Let's use simple coords.
-                    // Arrow 1
-                    {x:250, y:100, r:45}, {x:250, y:160, r:135}, // This makes <
-                    // Let's make >
-                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, // Pointing Right >
-                    
-                    // Arrow 2
-                    {x:350, y:100, r:135}, {x:350, y:160, r:45}, // Pointing Right >
+                    {x:200, y:100, r:45}, {x:200, y:160, r:135}, 
+                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, 
+                    {x:350, y:100, r:135}, {x:350, y:160, r:45}, 
                 ],
-                // Target: Square [ ]
-                // Top, Bot, Left, Right
                 winSlots: [
-                   {x:250, y:90, r:0}, // Top
-                   {x:250, y:170, r:0}, // Bot
-                   {x:210, y:130, r:90}, // Left
-                   {x:290, y:130, r:90}  // Right
+                   {x:250, y:90, r:0}, {x:250, y:170, r:0}, 
+                   {x:210, y:130, r:90}, {x:290, y:130, r:90} 
                 ],
-                // Wait, logic: Move 2 sticks.
-                // Start: 2 Arrows (4 sticks).
-                // End: Square (4 sticks).
-                // Logic: Move Arrow 2's sticks to close Arrow 1.
                 validSlots: [
-                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, // A1
-                    {x:350, y:100, r:135}, {x:350, y:160, r:45}, // A2
-                    // Square slots
-                    {x:300, y:80, r:0}, {x:300, y:180, r:0}, // Top/Bot (wide)
-                    {x:260, y:130, r:90}, {x:340, y:130, r:90}, // Sides
-                    // Smaller Square
-                    {x:290, y:90, r:0}, {x:290, y:170, r:0},
-                    {x:250, y:130, r:90}, {x:330, y:130, r:90},
+                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, {x:350, y:100, r:135}, {x:350, y:160, r:45}, 
+                    {x:300, y:80, r:0}, {x:300, y:180, r:0}, {x:260, y:130, r:90}, {x:340, y:130, r:90}, 
+                    {x:290, y:90, r:0}, {x:290, y:170, r:0}, {x:250, y:130, r:90}, {x:330, y:130, r:90},
                 ]
             },
             {
                 id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
                 formula: "圖形題",
                 hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
-                // Layout: [ ][ ][ ]
-                // 3 Squares in a row share sides? No, 10 matches usually means adjacent sharing sides.
-                // [ | | | ]
-                // Top: 3, Bot: 3, Vert: 4. Total 10.
                 customSticks: [
-                    // Top Row
                     {x:200, y:100, r:0}, {x:280, y:100, r:0}, {x:360, y:100, r:0},
-                    // Bot Row
                     {x:200, y:180, r:0}, {x:280, y:180, r:0}, {x:360, y:180, r:0},
-                    // Verts
                     {x:160, y:140, r:90}, {x:240, y:140, r:90}, {x:320, y:140, r:90}, {x:400, y:140, r:90}
                 ],
-                // Target: 2 Squares.
-                // Commonly: A big rectangle [   ] is not 2 squares.
-                // Move 2 to form: [ ] [ ] (separated).
-                // Removing middle verts {240,140} and {320,140} leaves a big rect.
-                // Place them to close the gap?
-                // Solution: Make a generic check for "Is it 2 squares?".
-                // Hard to validate programmatically.
-                // Let's simplified version: Move 2 to make [ ][ ].
-                // User moves 2 inner verticals to form the closing sides of outer squares.
                 winSlots: [
-                    // Left Square
                     {x:200, y:100, r:0}, {x:200, y:180, r:0}, {x:160, y:140, r:90}, {x:240, y:140, r:90},
-                    // Right Square (Separate)
                     {x:400, y:100, r:0}, {x:400, y:180, r:0}, {x:360, y:140, r:90}, {x:440, y:140, r:90}
-                    // Requires shift
                 ],
-                // Just create valid slots for the solution
                 validSlots: [
-                   // Original
                    {x:200, y:100, r:0}, {x:280, y:100, r:0}, {x:360, y:100, r:0},
                    {x:200, y:180, r:0}, {x:280, y:180, r:0}, {x:360, y:180, r:0},
                    {x:160, y:140, r:90}, {x:240, y:140, r:90}, {x:320, y:140, r:90}, {x:400, y:140, r:90},
-                   // Solution slots (Far Right Square)
                    {x:400, y:100, r:0}, {x:400, y:180, r:0}, {x:440, y:140, r:90}, {x:360, y:140, r:90}
                 ]
             }
@@ -269,15 +243,15 @@
                 check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === 30
             },
             {
-                id: 'sp3', type: 'math', title: "三十而立 (三)", instruction: "移動 1 根火柴，使結果等於 30", formula: "6 + 25 = 30",
-                hint1: "6 加 25 等於 31，多了 1。", hint2: "把 6 變成 5。",
-                layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 110 }, { type: 'digit', value: 2, x: 210 }, { type: 'digit', value: 5, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 530 }, { type: 'digit', value: 0, x: 630 }],
-                check: (values) => values.length === 5 && values[0] + (values[1]*10 + values[2]) === 30
+                id: 'sp3', type: 'math', title: "三十而立 (三)", instruction: "移動 1 根火柴，使結果等於 30", formula: "35 - 5 = 39",
+                hint1: "35 減 5 應該是 30。", hint2: "把 39 的 9 變成 0。移動 9 的中間火柴到左下角。",
+                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 5, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 9, x: 610 }],
+                check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === (values[3]*10 + values[4])
             },
             {
-                id: 'sp4', type: 'math', title: "三十而立 (四)", instruction: "移動 1 根火柴，使等式成立", formula: "38 - 8 = 38",
-                hint1: "38 減 8 等於 30。", hint2: "把結果 38 的 8 變成 0。",
-                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 8, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 8, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 8, x: 610 }],
+                id: 'sp4', type: 'math', title: "三十而立 (四)", instruction: "移動 1 根火柴，使等式成立", formula: "39 - 9 = 36",
+                hint1: "39 減 9 等於 30。", hint2: "把結果 36 的 6 變成 0。移動 6 的中間火柴到右上角。",
+                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 9, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 9, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }],
                 check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === (values[3]*10 + values[4])
             },
             {
@@ -346,8 +320,6 @@
                 // Add Extra Valid Slots
                 if (levelData.validSlots) {
                     levelData.validSlots.forEach((s, idx) => {
-                        // Check if a slot already exists here from init? 
-                        // Simple check: dist < 10
                         const exists = slots.some(ex => Math.abs(ex.x - (s.x + shiftX)) < 5 && Math.abs(ex.y - (s.y + baseY)) < 5);
                         if (!exists) {
                             slots.push({
@@ -530,22 +502,15 @@
                 if (!currentLevel) return;
 
                 if (currentLevel.type === 'shape') {
-                    // Shape Logic: Check if occupied slots match winSlots
-                    // We need to compare "Is there a stick at WinSlot X?"
-                    // WinSlots coordinates are relative to 0. Sticks are shifted.
-                    // Let's normalize stick positions by subtracting shiftX, shiftY
+                    // Shape Logic
                     const baseY = 50; 
-                    
-                    // Count matches
                     let matchCount = 0;
                     const required = currentLevel.winSlots.length;
                     
-                    // For each win slot, is there a stick nearby with correct rotation?
                     currentLevel.winSlots.forEach(ws => {
                         const targetX = ws.x + shiftX;
                         const targetY = ws.y + baseY;
                         
-                        // Find any stick close to this target
                         const hasStick = currentSticks.some(s => 
                             Math.abs(s.x - targetX) < 10 && 
                             Math.abs(s.y - targetY) < 10 &&
@@ -554,8 +519,6 @@
                         if (hasStick) matchCount++;
                     });
 
-                    // Also check if we have EXTRA sticks not in win slots?
-                    // Shapes usually use exact number of sticks. 
                     if (matchCount === required && matchCount === currentSticks.length) {
                         setGameState('won');
                         new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg').play().catch(e=>{});
