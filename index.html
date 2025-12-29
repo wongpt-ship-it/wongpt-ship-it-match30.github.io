@@ -68,16 +68,19 @@
 
         // Constants for precise geometry
         const SL = 80; // Stick Length
-        const DIAG = 56; // Projected length for 45deg (80 * sin(45) approx 56.57) - rounded for pixel snapping
+        const DIAG = 56; // Projected length for 45deg (80 * sin(45) approx 56.57)
 
-        // 7-segment positions (Relative to a 100x180 digit box)
-        const SEG_TOP = [20, 0, 0];
-        const SEG_TL  = [10, 20, 90];
-        const SEG_TR  = [90, 20, 90];
-        const SEG_MID = [20, 80, 0];
-        const SEG_BL  = [10, 100, 90];
+        // TIGHT SEGMENT POSITIONS (Gap Closed)
+        // Box: 0..100 width, 0..190 height. Stick width 10.
+        // Horizontal sticks are at x=10. Vertical sticks at x=0 or x=90.
+        // Top Corner: H-Stick starts at 10,0. V-Stick starts at 0,10. They meet at (10,10).
+        const SEG_TOP = [10, 0, 0];
+        const SEG_TL  = [0, 10, 90];
+        const SEG_TR  = [90, 10, 90];
+        const SEG_MID = [10, 90, 0];
+        const SEG_BL  = [0, 100, 90];
         const SEG_BR  = [90, 100, 90];
-        const SEG_BOT = [20, 160, 0];
+        const SEG_BOT = [10, 180, 0];
 
         const DIGIT_MAP = {
             0: [0, 1, 2, 4, 5, 6],
@@ -96,10 +99,22 @@
             SEG_TOP, SEG_TL, SEG_TR, SEG_MID, SEG_BL, SEG_BR, SEG_BOT
         ];
 
-        // Operator Stick Positions
-        const OP_PLUS = [[40, 50, 90], [10, 80, 0]];
-        const OP_MINUS = [[10, 80, 0]];
-        const OP_EQUAL = [[10, 65, 0], [10, 95, 0]];
+        // Operator Stick Positions (Centered)
+        // Digit Center is approx (50, 95).
+        // Plus: Center at (50, 90).
+        const OP_PLUS = [
+            [45, 50, 90], // Vertical: x=45 (visual 45..55), y=50..130. Center (50, 90).
+            [10, 85, 0]   // Horizontal: x=10..90, y=85 (visual 85..95). Center (50, 90).
+        ];
+        // Minus: Center at (50, 90)
+        const OP_MINUS = [
+            [10, 85, 0]   // Same as plus horiz
+        ];
+        // Equal: Center at (50, 90). Gap 20px.
+        const OP_EQUAL = [
+            [10, 70, 0],  // Top bar
+            [10, 110, 0]  // Bot bar
+        ];
 
         // --- VALIDATION HELPER ---
         const checkMath = (values, ops) => {
@@ -112,7 +127,6 @@
 
         // --- POOLS ---
 
-        // 1. Math Pool
         const POOL_MATH = [
             {
                 id: 'm1', type: 'math', title: "熱身題", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 5 = 8",
@@ -152,77 +166,44 @@
             }
         ];
 
-        // 2. Shape Pool - COORDINATES FIXED for strict connectivity
-        // Using integer approximations for diagonals (56px) to ensure no floating point skew
         const POOL_SHAPE = [
             {
                 id: 's1', type: 'shape', title: "游動的小魚", instruction: "移動 3 根火柴，讓魚向反方向游",
                 formula: "圖形題",
                 hint1: "魚頭現在向左，要把它變向右。", hint2: "移動魚鰭和下半部的身體。",
-                // Body Center approx at 400, 150
                 customSticks: [
-                    // Body Diamond (Top vertex 400,100)
-                    {x:400, y:100, r:45},  // Top-Right Side
-                    {x:400+DIAG, y:100+DIAG, r:135}, // Bot-Right Side
-                    {x:400, y:100+2*DIAG, r:225}, // Bot-Left Side
-                    {x:400-DIAG, y:100+DIAG, r:315}, // Top-Left Side
-                    // Tail (on Right Vertex)
-                    {x:400+DIAG, y:100+DIAG, r:315}, // Tail Top (Right-Up)
-                    {x:400+DIAG, y:100+DIAG, r:45},  // Tail Bot (Right-Down)
-                    // Fins (on Vertices)
-                    {x:400, y:100, r:225}, // Top Fin (Left-Up)
-                    {x:400, y:100+2*DIAG, r:135}  // Bot Fin (Left-Down)
-                ],
-                winSlots: [
-                    // Body (Same)
                     {x:400, y:100, r:45}, {x:400+DIAG, y:100+DIAG, r:135}, 
                     {x:400, y:100+2*DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:315},
-                    // Tail (on Left Vertex)
-                    {x:400-DIAG, y:100+DIAG, r:225}, // Tail Top (Left-Up)
-                    {x:400-DIAG, y:100+DIAG, r:135}, // Tail Bot (Left-Down)
-                    // Fins (on Vertices Pointing Right)
-                    {x:400, y:100, r:315}, // Top Fin (Right-Up)
-                    {x:400, y:100+2*DIAG, r:45}   // Bot Fin (Right-Down)
+                    {x:400+DIAG, y:100+DIAG, r:315}, {x:400+DIAG, y:100+DIAG, r:45},  
+                    {x:400, y:100, r:225}, {x:400, y:100+2*DIAG, r:135}  
+                ],
+                winSlots: [
+                    {x:400, y:100, r:45}, {x:400+DIAG, y:100+DIAG, r:135}, {x:400, y:100+2*DIAG, r:225}, {x:344, y:156, r:315},
+                    {x:400-DIAG, y:100+DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:135}, 
+                    {x:400, y:100, r:315}, {x:400, y:100+2*DIAG, r:45}   
                 ],
                 validSlots: [
-                    // Include both orientations for slots
-                    {x:400-DIAG, y:100+DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:135}, // L Tail
-                    {x:400+DIAG, y:100+DIAG, r:315}, {x:400+DIAG, y:100+DIAG, r:45},  // R Tail
-                    {x:400, y:100, r:225}, {x:400, y:100, r:315}, // Top Fins L/R
-                    {x:400, y:100+2*DIAG, r:135}, {x:400, y:100+2*DIAG, r:45} // Bot Fins L/R
+                    {x:400-DIAG, y:100+DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:135},
+                    {x:400+DIAG, y:100+DIAG, r:315}, {x:400+DIAG, y:100+DIAG, r:45},
+                    {x:400, y:100, r:225}, {x:400, y:100, r:315},
+                    {x:400, y:100+2*DIAG, r:135}, {x:400, y:100+2*DIAG, r:45}
                 ]
             },
             {
                 id: 's2', type: 'shape', title: "兩個箭頭", instruction: "移動 2 根火柴，把兩個箭頭變成一個正方形",
                 formula: "圖形題",
                 hint1: "將兩個箭頭的尾部連起來。", hint2: "這是一個視錯覺，不需要完美的正方形，長方形(Box)也可以。",
-                // Layout: > >
-                // Tip of first arrow at 200, 100.
                 customSticks: [
-                    // Arrow 1 (Left) - Pointing Right >
-                    {x:200, y:100, r:45},  // Top Stick: \
-                    {x:200, y:100+2*DIAG, r:315}, // Bot Stick: / (starts low goes up-right)
-                    // Gap
-                    // Arrow 2 (Right)
-                    {x:200+SL, y:100, r:45}, 
-                    {x:200+SL, y:100+2*DIAG, r:315} 
+                    {x:200, y:100, r:45}, {x:200, y:100+2*DIAG, r:315},
+                    {x:200+SL, y:100, r:45}, {x:200+SL, y:100+2*DIAG, r:315} 
                 ],
-                // Target: Square/Rect [ ]
-                // Top, Bot, Left, Right
                 winSlots: [
-                   // The square uses the existing arrow heads as left/right sides? 
-                   // No, usually you close the open ends.
-                   // Let's assume standard square using vertical/horizontal
-                   {x:200+DIAG/2, y:100+DIAG/2, r:0}, // Top
-                   {x:200+DIAG/2, y:100+1.5*DIAG, r:0}, // Bot
-                   {x:200, y:100+DIAG, r:90}, // Left
-                   {x:200+SL, y:100+DIAG, r:90}  // Right
+                   {x:200+DIAG/2, y:100+DIAG/2, r:0}, {x:200+DIAG/2, y:100+1.5*DIAG, r:0},
+                   {x:200, y:100+DIAG, r:90}, {x:200+SL, y:100+DIAG, r:90}
                 ],
-                // Just provide a grid of valid slots around the area
                 validSlots: [
                     {x:200+DIAG/2, y:100+DIAG/2, r:0}, {x:200+DIAG/2, y:100+1.5*DIAG, r:0},
                     {x:200, y:100+DIAG, r:90}, {x:200+SL, y:100+DIAG, r:90},
-                    // Also diagonals
                     {x:200, y:100, r:45}, {x:200, y:100+2*DIAG, r:315},
                     {x:200+SL, y:100, r:45}, {x:200+SL, y:100+2*DIAG, r:315}
                 ]
@@ -231,38 +212,23 @@
                 id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
                 formula: "圖形題",
                 hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
-                // [ ][ ][ ] - Strict 80px grid
                 customSticks: [
-                    // Top Row: 3 sticks
                     {x:100, y:100, r:0}, {x:180, y:100, r:0}, {x:260, y:100, r:0},
-                    // Bot Row: 3 sticks
                     {x:100, y:180, r:0}, {x:180, y:180, r:0}, {x:260, y:180, r:0},
-                    // Verts: 4 sticks (at 100, 180, 260, 340)
                     {x:100, y:100, r:90}, {x:180, y:100, r:90}, {x:260, y:100, r:90}, {x:340, y:100, r:90}
                 ],
-                // Target: [ ] ... [ ] (Two separated squares)
                 winSlots: [
-                    // Left Square (100,100)
                     {x:100, y:100, r:0}, {x:100, y:180, r:0}, {x:100, y:100, r:90}, {x:180, y:100, r:90},
-                    // Right Square (340, 100) - Start at 340? No, 3rd square started at 260.
-                    // If we remove middle square (180 to 260).
-                    // We form a new square at 340?
-                    // Previous squares: 100-180, 180-260, 260-340.
-                    // New square at 340-420.
                     {x:340, y:100, r:0}, {x:340, y:180, r:0}, {x:340, y:100, r:90}, {x:420, y:100, r:90}
                 ],
                 validSlots: [
-                   // All grid positions for 4 slots wide
-                   // Horizontals
                    {x:100, y:100, r:0}, {x:180, y:100, r:0}, {x:260, y:100, r:0}, {x:340, y:100, r:0},
                    {x:100, y:180, r:0}, {x:180, y:180, r:0}, {x:260, y:180, r:0}, {x:340, y:180, r:0},
-                   // Verticals
                    {x:100, y:100, r:90}, {x:180, y:100, r:90}, {x:260, y:100, r:90}, {x:340, y:100, r:90}, {x:420, y:100, r:90}
                 ]
             }
         ];
 
-        // 3. Special Pool (30th)
         const POOL_SPECIAL = [
             {
                 id: 'sp1', type: 'math', title: "三十而立 (一)", instruction: "移動 1 根火柴，使結果等於 30", formula: "26 + 4 = 20",
@@ -303,7 +269,6 @@
             return [...math, ...shape, ...special];
         };
 
-        // Improved Bounding Box Calculation including Rotation
         const calculateBounds = (items) => {
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             items.forEach(item => {
@@ -324,7 +289,6 @@
             let slots = [];
             let idCounter = 0;
             
-            // 1. Generate Raw Items
             let rawItems = [];
             if (levelData.type === 'shape') {
                 rawItems = [...levelData.customSticks.map(s => ({...s, type: 'stick'})), 
@@ -332,7 +296,7 @@
             } else {
                 levelData.layout.forEach((part, partIndex) => {
                     let baseX = part.x; 
-                    let baseY = 0; // Relative
+                    let baseY = 0; 
                     if (part.type === 'digit') {
                         SEGMENT_POSITIONS.forEach((pos, segIndex) => {
                             rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex, segmentIndex: segIndex });
@@ -341,21 +305,16 @@
                             }
                         });
                     } else if (part.type === 'op') {
-                        const ops = part.value === '=' ? OP_EQUAL : OP_PLUS;
+                        const ops = part.value === '=' ? OP_EQUAL : (part.value === '-' ? OP_MINUS : OP_PLUS);
                         ops.forEach((pos, segIndex) => {
-                            // Filter for Minus
-                            if (part.value === '-' && segIndex === 0) return; // Skip vertical for minus
-                            // Add Slots
                             if (part.value !== '=') {
-                                // Add both V and H slots for + and - to allow change
                                 OP_PLUS.forEach((p, idx) => {
                                     rawItems.push({ x: baseX + p[0], y: baseY + p[1], r: p[2], type: 'slot', partIndex, opType: idx===0?'vert':'horiz' });
                                 });
                             } else {
                                 rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex });
                             }
-                            // Add Stick
-                            if (part.value === '+' || part.value === '=' || (part.value === '-' && segIndex === 1)) {
+                            if (part.value === '+' || part.value === '=' || (part.value === '-' && segIndex === 0)) {
                                 rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'stick' });
                             }
                         });
@@ -363,18 +322,14 @@
                 });
             }
 
-            // 2. Calculate Center with Integer Rounding
             const bounds = calculateBounds(rawItems);
             const contentW = bounds.maxX - bounds.minX;
             const contentH = bounds.maxY - bounds.minY;
-            
             const containerW = 800;
             const containerH = 320;
-            // CRITICAL FIX: Round the shift to prevent sub-pixel rendering (blur/skew)
             const shiftX = Math.round((containerW - contentW) / 2 - bounds.minX);
             const shiftY = Math.round((containerH - contentH) / 2 - bounds.minY);
 
-            // 3. Create Final Entities
             rawItems.forEach(item => {
                 if (item.type === 'stick') {
                     const slotId = `slot_init_${idCounter}`;
@@ -400,7 +355,6 @@
                 }
             });
             
-            // For Math, link sticks to nearest slot initially
             if (levelData.type !== 'shape') {
                 sticks.forEach(stick => {
                     const match = slots.find(s => Math.abs(s.x - stick.x) < 5 && Math.abs(s.y - stick.y) < 5 && s.r === stick.rotation);
@@ -408,7 +362,6 @@
                 });
             }
 
-            // Dedup slots
             const uniqueSlots = [];
             const seen = new Set();
             slots.forEach(s => {
