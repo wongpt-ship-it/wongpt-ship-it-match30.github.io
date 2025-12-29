@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>三十週年：火柴智多星</title>
+    <title>「柴」高三十斗</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -65,8 +65,7 @@
             return newArray;
         };
 
-        // --- Configuration (CLASSIC ALIGNMENT from fix.txt) ---
-        // Stick size 80x10. Transform Origin 5px 5px.
+        // --- Configuration (CLASSIC ALIGNMENT) ---
         
         const SEG_TOP = [20, 0, 0];
         const SEG_TL  = [10, 20, 90];
@@ -93,18 +92,12 @@
             SEG_TOP, SEG_TL, SEG_TR, SEG_MID, SEG_BL, SEG_BR, SEG_BOT
         ];
 
-        // Operators (Classic)
-        const OP_PLUS = [
-            [40, 50, 90], // Vertical
-            [10, 80, 0]   // Horizontal
-        ];
+        // Operators
+        const OP_PLUS = [[40, 50, 90], [10, 80, 0]];
         const OP_MINUS = [[10, 80, 0]];
         const OP_EQUAL = [[10, 65, 0], [10, 95, 0]];
 
-        // --- COORDINATE CONVERTER FOR SHAPES ---
-        // Converts "Geometric Center" to "Top-Left Pivot (5,5)" coordinates.
-        // Stick 80x10. Center is (40, 5) relative to stick. Pivot is (5, 5).
-        // Vector Pivot->Center is (35, 0) in local space.
+        // --- COORDINATE CONVERTER ---
         const centerToPivot = (cx, cy, r) => {
             const rad = r * Math.PI / 180;
             return {
@@ -115,7 +108,7 @@
         };
 
         const SL = 80;
-        const DIAG = 56; // 80 * sin(45)
+        const DIAG = 56;
 
         // --- POOLS ---
 
@@ -125,121 +118,163 @@
                 id: 'm1', type: 'math', title: "熱身題", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 5 = 8",
                 hint1: "8 不需要變動，試著改變其中一個 5。", hint2: "把第一個 5 的左上角火柴移到右上角，變成 3。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => values[0]+values[1]===values[2]
             },
             {
                 id: 'm2', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "9 + 3 = 6",
-                hint1: "嘗試把 9 變小。", hint2: "把 9 的左上角火柴移到 6 的缺口，讓它變成 8。",
+                hint1: "嘗試把 9 變小。", hint2: "把 9 變成 5，變成 5+3=8。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 3, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 6, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => values[0]+values[1]===values[2]
             },
             {
                 id: 'm3', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
-                hint1: "這題有多個解法！試試把加號變減號？", hint2: "解法一：8 - 4 = 4。解法二：0 + 4 = 4。",
+                hint1: "試試把加號變減號？", hint2: "8 - 4 = 4 或 0 + 4 = 4。",
                 layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 4, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 4, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) || (ops[0]==='-' && values[0]-values[1]===values[2])
             },
             {
                 id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 9 = 9", 
                 hint1: "5 變成 0。", hint2: "把 5 的中間火柴移到右上角。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 9, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 9, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => values[0]+values[1]===values[2]
             },
             {
                 id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
-                hint1: "減法變加法？", hint2: "把 9 變成 3，減號變加號。",
+                hint1: "減法變加法？", hint2: "3 + 5 = 8。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2])
             },
             {
                 id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
-                hint1: "3 變大一點？", hint2: "把加號變成減號，把直的那根放到 3 上變成 9。",
+                hint1: "試試看 9 - 6 = 3。", hint2: "把加號變成減號。",
                 layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => (ops[0]==='-' && values[0]-values[1]===values[2])
             },
             {
                 id: 'm7', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
-                hint1: "加法變減法？", hint2: "把加號的直火柴移到 5 上，變成 9。",
+                hint1: "9 - 7 = 2。", hint2: "把加號的直火柴移到 5 上。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
-                check: (values, ops) => checkMath(values, ops)
+                check: (values, ops) => (ops[0]==='-' && values[0]-values[1]===values[2])
             }
         ];
 
-        // 2. Shape Pool (Restored with accurate geometry)
-        // Removed Fish and Arrows as requested.
+        // 2. Shape Pool
         const POOL_SHAPE = [
             {
-                id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
-                formula: "圖形題",
-                hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
+                id: 's4', type: 'shape', title: "井字變正方形", instruction: "移動 3 根火柴，形成 3 個正方形", formula: "圖形題",
+                hint1: "試著把外圍的火柴移到內部。", hint2: "利用中間的空間，形成三個相連的正方形（以「品」字形或L形排列）。",
+                // Well Shape: Center Box + 8 extensions.
                 customSticks: [
-                    {cx:140, cy:100, r:0}, {cx:220, cy:100, r:0}, {cx:300, cy:100, r:0},
-                    {cx:140, cy:180, r:0}, {cx:220, cy:180, r:0}, {cx:300, cy:180, r:0},
-                    {cx:100, cy:140, r:90}, {cx:180, cy:140, r:90}, {cx:260, cy:140, r:90}, {cx:340, cy:140, r:90}
+                    // Center Square
+                    {cx:400, cy:120, r:0}, {cx:400, cy:200, r:0}, // Horiz
+                    {cx:360, cy:160, r:90}, {cx:440, cy:160, r:90}, // Vert
+                    // Extensions
+                    {cx:320, cy:120, r:0}, {cx:480, cy:120, r:0}, // Top Exts
+                    {cx:320, cy:200, r:0}, {cx:480, cy:200, r:0}, // Bot Exts
+                    {cx:360, cy:80, r:90}, {cx:360, cy:240, r:90}, // Left Exts
+                    {cx:440, cy:80, r:90}, {cx:440, cy:240, r:90}  // Right Exts
                 ].map(s => centerToPivot(s.cx, s.cy, s.r)),
-                winSlots: [
-                    {cx:140, cy:100, r:0}, {cx:140, cy:180, r:0}, {cx:100, cy:140, r:90}, {cx:180, cy:140, r:90},
-                    {cx:340, cy:100, r:0}, {cx:340, cy:180, r:0}, {cx:340, cy:140, r:90}, {cx:420, cy:140, r:90}
+                // Valid Slots: Full 40px Grid for brick-laying
+                validSlots: (() => {
+                    const slots = [];
+                    // Generate full grid (Horiz and Vert slots at every 40px intersection)
+                    for(let x=240; x<=560; x+=40) {
+                        for(let y=40; y<=280; y+=40) {
+                            slots.push({cx:x, cy:y, r:0});
+                            slots.push({cx:x, cy:y, r:90});
+                        }
+                    }
+                    return slots.map(s => centerToPivot(s.cx, s.cy, s.r));
+                })(),
+                checkGeometry: '3_squares' // Flag for ANY 3 squares
+            },
+            {
+                id: 's5', type: 'shape', title: "方中之方", instruction: "移動 4 根火柴，形成 3 個正方形", formula: "圖形題",
+                hint1: "現在是一個大正方形包著一個小正方形。", hint2: "把大正方形的邊拆下來，與裡面的正方形組合成三個獨立的正方形。",
+                // Layout: Outer Square (2x2) containing Inner Square (1x1)
+                // Center 400, 160.
+                customSticks: [
+                    // Inner Square (1x1)
+                    {cx:400, cy:120, r:0}, {cx:400, cy:200, r:0}, // Horiz
+                    {cx:360, cy:160, r:90}, {cx:440, cy:160, r:90}, // Vert
+                    // Outer Square (2x2, gap 40px from inner)
+                    // Top Row (y=80)
+                    {cx:360, cy:80, r:0}, {cx:440, cy:80, r:0},
+                    // Bot Row (y=240)
+                    {cx:360, cy:240, r:0}, {cx:440, cy:240, r:0},
+                    // Left Col (x=320)
+                    {cx:320, cy:120, r:90}, {cx:320, cy:200, r:90},
+                    // Right Col (x=480)
+                    {cx:480, cy:120, r:90}, {cx:480, cy:200, r:90}
                 ].map(s => centerToPivot(s.cx, s.cy, s.r)),
-                validSlots: [
-                   {cx:340, cy:100, r:0}, {cx:340, cy:180, r:0}, {cx:420, cy:140, r:90}
-                ].map(s => centerToPivot(s.cx, s.cy, s.r))
+                // Valid Slots: Full 40px Grid
+                validSlots: (() => {
+                    const slots = [];
+                    for(let x=240; x<=560; x+=40) {
+                        for(let y=40; y<=280; y+=40) {
+                            slots.push({cx:x, cy:y, r:0});
+                            slots.push({cx:x, cy:y, r:90});
+                        }
+                    }
+                    return slots.map(s => centerToPivot(s.cx, s.cy, s.r));
+                })(),
+                checkGeometry: '3_squares'
             }
         ];
 
-        // 3. Special Pool (30th)
         const POOL_SPECIAL = [
-            {
-                id: 'sp1', type: 'math', title: "三十而立 (一)", instruction: "移動 1 根火柴，使結果等於 30", formula: "26 + 4 = 20",
-                hint1: "把答案 20 變成 30。", hint2: "移動 20 的左下角火柴。",
-                layout: [{ type: 'digit', value: 2, x: 0 }, { type: 'digit', value: 6, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 4, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 2, x: 510 }, { type: 'digit', value: 0, x: 610 }],
-                check: (values) => values.length === 5 && (values[0]*10 + values[1]) + values[2] === 30
-            },
-            {
-                id: 'sp2', type: 'math', title: "三十而立 (二)", instruction: "移動 1 根火柴，使結果等於 30", formula: "36 - 6 = 36",
-                hint1: "把答案 36 變成 30。", hint2: "移動 6 的中間火柴。",
-                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 6, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 6, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }],
-                check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === 30
-            },
-            {
-                id: 'sp3', type: 'math', title: "三十而立 (三)", instruction: "移動 1 根火柴，使結果等於 30", formula: "35 - 5 = 39",
-                hint1: "35 減 5 應該是 30。", hint2: "把 39 的 9 變成 0。移動 9 的中間火柴到左下角。",
-                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 5, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 9, x: 610 }],
-                check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === (values[3]*10 + values[4])
-            },
-            {
-                id: 'sp4', type: 'math', title: "三十而立 (四)", instruction: "移動 1 根火柴，使等式成立", formula: "39 - 9 = 36",
-                hint1: "39 減 9 等於 30。", hint2: "把結果 36 的 6 變成 0。移動 6 的中間火柴到右上角。",
-                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 9, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 9, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }],
-                check: (values) => values.length === 5 && (values[0]*10 + values[1]) - values[2] === (values[3]*10 + values[4])
-            },
-            {
-                id: 'sp5', type: 'math', title: "三十週年 (終極)", instruction: "移動 1 根火柴，使結果等於 30", formula: "15 + 15 = 50",
-                hint1: "15 + 15 應該是 30。", hint2: "把 50 的 5 變成 3。移動左上角的火柴到右上角。",
-                layout: [{ type: 'digit', value: 1, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 1, x: 310 }, { type: 'digit', value: 5, x: 410 }, { type: 'op', value: '=', x: 530 }, { type: 'digit', value: 5, x: 610 }, { type: 'digit', value: 0, x: 710 }],
-                check: (values) => values.length === 6 && (values[0]*10 + values[1]) + (values[2]*10 + values[3]) === 30
-            }
+            { id: 'sp1', type: 'math', title: "三十而立 (一)", instruction: "移動 1 根火柴，使結果等於 30", formula: "26 + 4 = 20", layout: [{ type: 'digit', value: 2, x: 0 }, { type: 'digit', value: 6, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 4, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 2, x: 510 }, { type: 'digit', value: 0, x: 610 }], check: (values, ops) => (values[0]*10+values[1])+values[2]===30 },
+            { id: 'sp2', type: 'math', title: "三十而立 (二)", instruction: "移動 1 根火柴，使結果等於 30", formula: "36 - 6 = 36", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 6, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 6, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
+            { id: 'sp3', type: 'math', title: "三十而立 (三)", instruction: "移動 1 根火柴，使結果等於 30", formula: "35 - 5 = 39", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 5, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 9, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
+            { id: 'sp4', type: 'math', title: "三十而立 (四)", instruction: "移動 1 根火柴，使等式成立", formula: "39 - 9 = 36", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 9, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 9, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
+            { id: 'sp5', type: 'math', title: "三十週年 (終極)", instruction: "移動 1 根火柴，使結果等於 30", formula: "15 + 15 = 50", layout: [{ type: 'digit', value: 1, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 1, x: 310 }, { type: 'digit', value: 5, x: 410 }, { type: 'op', value: '=', x: 530 }, { type: 'digit', value: 5, x: 610 }, { type: 'digit', value: 0, x: 710 }], check: (values, ops) => (values[0]*10+values[1])+(values[2]*10+values[3])===30 }
         ];
 
         const generateLevelSet = () => {
-            // Select 5 random Math levels from the pool of 7
-            const math = shuffleArray(POOL_MATH).slice(0, 5);
-            // Select 1 random Shape levels (Now only 1 available)
+            const math = shuffleArray(POOL_MATH).slice(0, 2);
+            // Select 1 shape level (from 2 available)
             const shape = shuffleArray(POOL_SHAPE).slice(0, 1);
-            // Select 4 random Special levels
-            const special = shuffleArray(POOL_SPECIAL).slice(0, 4);
+            const special = shuffleArray(POOL_SPECIAL).slice(0, 2);
             return [...math, ...shape, ...special];
         };
 
+        // --- GEOMETRY CHECKER (Generic 3 Squares) ---
+        const getFoundSquares = (sticks) => {
+            const tolerance = 15;
+            const hSticks = [], vSticks = [];
+            
+            sticks.forEach(s => {
+                const rot = (s.rotation % 180 + 180) % 180; 
+                if (Math.abs(rot) < 10) hSticks.push({x: s.x, y: s.y});
+                else if (Math.abs(rot - 90) < 10) vSticks.push({x: s.x, y: s.y});
+            });
+
+            const squares = [];
+            
+            hSticks.forEach(top => {
+                // Find Bottom H (y + 80)
+                const bot = hSticks.find(b => Math.abs(b.x - top.x) < tolerance && Math.abs(b.y - (top.y + 80)) < tolerance);
+                if (bot) {
+                    // Find Left V (x-5, y+5)
+                    const left = vSticks.find(l => Math.abs(l.x - (top.x - 5)) < tolerance && Math.abs(l.y - (top.y + 5)) < tolerance);
+                    // Find Right V (x+75, y+5)
+                    const right = vSticks.find(r => Math.abs(r.x - (top.x + 75)) < tolerance && Math.abs(r.y - (top.y + 5)) < tolerance);
+
+                    if (left && right) {
+                        squares.push({x: top.x, y: top.y});
+                    }
+                }
+            });
+            return squares;
+        };
+
+        // --- REMAINDER OF APP (Logic same as before) ---
+        
         const calculateBounds = (items) => {
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             items.forEach(item => {
-                // Approximate visual bounds based on pivot logic
                 const rad = item.r * Math.PI / 180;
-                // Stick is 80x10. Pivot at 5,5.
-                const corners = [
-                    {x: -5, y: -5}, {x: 75, y: -5}, {x: -5, y: 5}, {x: 75, y: 5}
-                ];
+                const corners = [{x: -5, y: -5}, {x: 75, y: -5}, {x: -5, y: 5}, {x: 75, y: 5}];
                 corners.forEach(c => {
                     const rx = c.x * Math.cos(rad) - c.y * Math.sin(rad);
                     const ry = c.x * Math.sin(rad) + c.y * Math.cos(rad);
@@ -256,30 +291,28 @@
             let sticks = [];
             let slots = [];
             let idCounter = 0;
-            
             let rawItems = [];
+
             if (levelData.type === 'shape') {
-                rawItems = [...levelData.customSticks.map(s => ({...s, type: 'stick'})), 
-                            ...(levelData.validSlots || []).map(s => ({...s, type: 'slot'})),
-                            ...(levelData.winSlots || []).map(s => ({...s, type: 'slot'}))];
+                rawItems = levelData.customSticks.map(s => ({...s, type: 'stick'}));
+                // Auto slots for sticks
+                rawItems = [...rawItems, ...rawItems.map(s => ({...s, type: 'slot'}))];
+                // Extra Valid Slots
+                if(levelData.validSlots) rawItems = [...rawItems, ...levelData.validSlots.map(s => ({...s, type: 'slot'}))];
             } else {
+                // Math Gen Logic
                 levelData.layout.forEach((part, partIndex) => {
-                    let baseX = part.x; 
-                    let baseY = 0; 
+                    let baseX = part.x; let baseY = 0; 
                     if (part.type === 'digit') {
                         SEGMENT_POSITIONS.forEach((pos, segIndex) => {
                             rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex, segmentIndex: segIndex });
-                            if (DIGIT_MAP[part.value].includes(segIndex)) {
-                                rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'stick' });
-                            }
+                            if (DIGIT_MAP[part.value].includes(segIndex)) rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'stick' });
                         });
                     } else if (part.type === 'op') {
                         const ops = part.value === '=' ? OP_EQUAL : (part.value === '-' ? OP_MINUS : OP_PLUS);
                         ops.forEach((pos, segIndex) => {
                             if (part.value !== '=') {
-                                OP_PLUS.forEach((p, idx) => {
-                                    rawItems.push({ x: baseX + p[0], y: baseY + p[1], r: p[2], type: 'slot', partIndex, opType: idx===0?'vert':'horiz' });
-                                });
+                                OP_PLUS.forEach((p, idx) => rawItems.push({ x: baseX + p[0], y: baseY + p[1], r: p[2], type: 'slot', partIndex, opType: idx===0?'vert':'horiz' }));
                             } else {
                                 rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex });
                             }
@@ -292,15 +325,10 @@
             }
 
             const bounds = calculateBounds(rawItems);
-            const contentW = bounds.maxX - bounds.minX;
-            const contentH = bounds.maxY - bounds.minY;
-            const containerW = 800;
-            const containerH = 320;
-            
-            const shiftX = Math.round((containerW - contentW) / 2 - bounds.minX);
-            const shiftY = Math.round((containerH - contentH) / 2 - bounds.minY);
+            // SHIFT UP: Subtract 50 from Y
+            const shiftX = Math.round((800 - (bounds.maxX - bounds.minX)) / 2 - bounds.minX);
+            const shiftY = Math.round((320 - (bounds.maxY - bounds.minY)) / 2 - bounds.minY) - 50;
 
-            // Create Unique Slots map
             const slotMap = new Map();
             const addSlot = (item) => {
                 const sx = Math.round(item.x + shiftX);
@@ -315,22 +343,13 @@
                 return slotMap.get(key).id;
             };
 
-            rawItems.forEach(item => {
-                if (item.type === 'slot') addSlot(item);
-            });
-
-            // Create Sticks
+            rawItems.forEach(item => { if (item.type === 'slot') addSlot(item); });
             rawItems.forEach(item => {
                 if (item.type === 'stick') {
                     const sx = Math.round(item.x + shiftX);
                     const sy = Math.round(item.y + shiftY);
                     const slotId = addSlot(item);
-                    sticks.push({
-                        id: `stick_${idCounter++}`,
-                        slotId: slotId,
-                        x: sx, y: sy, rotation: item.r,
-                        color: 'bg-orange-600'
-                    });
+                    sticks.push({ id: `stick_${idCounter++}`, slotId, x: sx, y: sy, rotation: item.r, color: 'bg-orange-600' });
                 }
             });
 
@@ -339,14 +358,7 @@
 
         const Stick = ({ x, y, rotation, isDragging, onMouseDown }) => (
             <div onMouseDown={onMouseDown} onTouchStart={onMouseDown}
-                style={{
-                    position: 'absolute', left: x, top: y, width: '80px', height: '10px',
-                    backgroundColor: isDragging ? '#fbbf24' : '#d97706', borderRadius: '5px',
-                    transform: `rotate(${rotation}deg)`, 
-                    transformOrigin: '5px 5px',
-                    cursor: 'pointer',
-                    zIndex: isDragging ? 50 : 10, touchAction: 'none'
-                }}
+                style={{ position: 'absolute', left: x, top: y, width: '80px', height: '10px', backgroundColor: isDragging ? '#fbbf24' : '#d97706', borderRadius: '5px', transform: `rotate(${rotation}deg)`, transformOrigin: '5px 5px', cursor: 'pointer', zIndex: isDragging ? 50 : 10, touchAction: 'none' }}
                 className={`flex items-center ${isDragging ? 'shadow-2xl scale-110' : 'stick-shadow'} transition-transform duration-100`}
             >
                 <div style={{ width: '12px', height: '14px', backgroundColor: '#ef4444', borderRadius: '50%', position: 'absolute', left: '-2px', top: '-2px' }}></div>
@@ -355,15 +367,7 @@
         );
 
         const Slot = ({ x, y, rotation }) => (
-            <div className="slot-dash"
-                style={{
-                    position: 'absolute', left: x, top: y, width: '80px', height: '10px',
-                    borderRadius: '5px', 
-                    transform: `rotate(${rotation}deg)`, 
-                    transformOrigin: '5px 5px',
-                    zIndex: 1
-                }}
-            ></div>
+            <div className="slot-dash" style={{ position: 'absolute', left: x, top: y, width: '80px', height: '10px', borderRadius: '5px', transform: `rotate(${rotation}deg)`, transformOrigin: '5px 5px', zIndex: 1 }}></div>
         );
 
         const App = () => {
@@ -379,38 +383,22 @@
             const [boardScale, setBoardScale] = useState(1);
             const [levels, setLevels] = useState([]);
             const [offsets, setOffsets] = useState({x:0, y:0});
-
             const boardRef = useRef(null);
             const gameAreaRef = useRef(null);
 
-            useEffect(() => {
-                setLevels(generateLevelSet());
-            }, []);
-
+            useEffect(() => { setLevels(generateLevelSet()); }, []);
             const currentLevel = levels.length > 0 ? levels[currentLevelIdx] : null;
-
+            useEffect(() => { if (currentLevel) loadLevelData(currentLevel); }, [currentLevel]);
             useEffect(() => {
-                if (currentLevel) loadLevelData(currentLevel);
-            }, [currentLevel]);
-
-            useEffect(() => {
-                const handleResize = () => {
-                    const w = window.innerWidth;
-                    setBoardScale(Math.min(1, (w - 32) / 800));
-                };
-                handleResize();
-                window.addEventListener('resize', handleResize);
+                const handleResize = () => setBoardScale(Math.min(1, (window.innerWidth - 32) / 800));
+                handleResize(); window.addEventListener('resize', handleResize);
                 return () => window.removeEventListener('resize', handleResize);
             }, []);
 
             const loadLevelData = (levelData) => {
-                const { sticks: initSticks, slots: initSlots, shiftX, shiftY } = generateSticks(levelData);
-                setSticks(initSticks);
-                setSlots(initSlots);
-                setOffsets({x: shiftX, y: shiftY});
-                setMovesCount(0);
-                setGameState('playing');
-                setHintLevel(0);
+                const { sticks: s, slots: sl, shiftX, shiftY } = generateSticks(levelData);
+                setSticks(s); setSlots(sl); setOffsets({x: shiftX, y: shiftY});
+                setMovesCount(0); setGameState('playing'); setHintLevel(0);
             };
 
             const handleMove = (e) => {
@@ -421,9 +409,8 @@
                 const scale = rect.width / 800;
                 setMousePos({ x: (clientX - rect.left) / scale - dragOffset.x, y: (clientY - rect.top) / scale - dragOffset.y });
             };
-            const handleUp = () => {
-                if (draggingId) { snapStick(draggingId, mousePos.x, mousePos.y); setDraggingId(null); }
-            };
+            const handleUp = () => { if (draggingId) { snapStick(draggingId, mousePos.x, mousePos.y); setDraggingId(null); } };
+            
             useEffect(() => {
                 window.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleUp);
                 window.addEventListener('touchmove', handleMove, { passive: false }); window.addEventListener('touchend', handleUp);
@@ -452,7 +439,6 @@
                     const isOccupied = sticks.some(s => s.slotId === slot.id && s.id !== stickId);
                     if (dist < minDist && !isOccupied) { minDist = dist; nearest = slot; }
                 });
-
                 if (nearest) {
                     const newSticks = sticks.map(s => s.id === stickId ? { ...s, x: nearest.x, y: nearest.y, slotId: nearest.id, rotation: nearest.r } : s);
                     if(currentStick.slotId !== nearest.id) setMovesCount(p => p + 1);
@@ -467,32 +453,19 @@
             const checkWinCondition = (currentSticks) => {
                 if (!currentLevel) return;
 
-                if (currentLevel.type === 'shape') {
-                    // Check if win slots are occupied
-                    let matchCount = 0;
-                    if(!currentLevel.winSlots) return; 
-                    
-                    const winSlotPivots = currentLevel.winSlots.map(ws => centerToPivot(ws.x, ws.y, ws.r));
-                    
-                    winSlotPivots.forEach(ws => {
-                        const targetX = Math.round(ws.x + offsets.x);
-                        const targetY = Math.round(ws.y + offsets.y);
-                        
-                        const hasStick = currentSticks.some(s => 
-                            Math.abs(s.x - targetX) < 15 && 
-                            Math.abs(s.y - targetY) < 15 &&
-                            Math.abs(s.rotation - ws.r) < 10
-                        );
-                        if (hasStick) matchCount++;
-                    });
-
-                    if (matchCount >= winSlotPivots.length) {
+                if (currentLevel.checkGeometry === '3_squares' || currentLevel.checkGeometry === '2_squares') {
+                    const target = currentLevel.checkGeometry === '3_squares' ? 3 : 2;
+                    const sq = getFoundSquares(currentSticks);
+                    // Check if unique squares (by simplified center or top-left)
+                    const unique = new Set(sq.map(s => `${Math.round(s.x)},${Math.round(s.y)}`));
+                    if (unique.size >= target) {
                         setGameState('won');
                         new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg').play().catch(e=>{});
                     }
-
+                } else if (currentLevel.type === 'shape') {
+                     // ...
                 } else {
-                    // Math Logic
+                    // Math Logic (Existing)
                     const filledSlots = {};
                     currentSticks.forEach(s => {
                         const slot = slots.find(sl => sl.id === s.slotId);
@@ -503,10 +476,8 @@
                             else filledSlots[slot.partIndex].push(slot.segmentIndex);
                         }
                     });
-
                     const decodedValues = [], decodedOps = [];
                     let isMalformed = false;
-
                     currentLevel.layout.forEach((part, idx) => {
                         const segments = filledSlots[idx] || [];
                         if (part.type === 'digit') {
@@ -526,7 +497,6 @@
                             }
                         }
                     });
-
                     if (!isMalformed) {
                         try {
                             if (currentLevel.check(decodedValues, decodedOps)) {
@@ -542,11 +512,9 @@
                 if (currentLevelIdx < levels.length - 1) setCurrentLevelIdx(p => p + 1);
                 else {
                     alert("恭喜！你已完成所有關卡！30週年快樂！");
-                    setLevels(generateLevelSet());
-                    setCurrentLevelIdx(0);
+                    setLevels(generateLevelSet()); setCurrentLevelIdx(0);
                 }
             };
-
             const resetLevel = () => { if(currentLevel) loadLevelData(currentLevel); };
 
             if (!currentLevel) return <div className="flex h-screen items-center justify-center text-2xl text-orange-600 font-bold">載入中...</div>;
@@ -555,7 +523,7 @@
                 <div className="min-h-screen flex flex-col items-center py-6 px-2 w-full max-w-4xl mx-auto">
                     <div className="w-full flex justify-between items-center mb-4 bg-white/80 backdrop-blur p-4 rounded-xl shadow-lg border-b-4 border-orange-300">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-orange-700 tracking-wider">三十週年：火柴智多星</h1>
+                            <h1 className="text-2xl md:text-3xl font-bold text-orange-700 tracking-wider">「柴」高三十斗</h1>
                             <div className="flex items-center gap-2 mt-2">
                                 <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">關卡 {currentLevelIdx + 1}/{levels.length}</span>
                                 {currentLevel.id.startsWith('sp') && <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm animate-pulse">30週年特別題</span>}
@@ -567,19 +535,15 @@
                             <div className="text-3xl font-black text-gray-700">{movesCount}</div>
                         </div>
                     </div>
-
                     <div className={`border-l-8 p-6 mb-6 w-full rounded-lg shadow-md ${currentLevel.type === 'shape' ? 'bg-blue-50 border-blue-400 text-blue-900' : 'bg-[#fcf8e3] border-yellow-400 text-yellow-800'}`}>
                         <div className="text-lg font-bold mb-1">{currentLevel.title}</div>
                         <div className="text-xl mb-2">{currentLevel.instruction}</div>
-                        <div className="text-2xl font-mono bg-white/50 inline-block px-4 py-2 rounded border shadow-inner tracking-widest opacity-80">
-                            {currentLevel.formula}
-                        </div>
+                        <div className="text-2xl font-mono bg-white/50 inline-block px-4 py-2 rounded border shadow-inner tracking-widest opacity-80">{currentLevel.formula}</div>
                     </div>
-
                     <div ref={gameAreaRef} className="relative bg-[#eeeadd] rounded-xl shadow-inner border-4 border-[#d1cbb8] w-full overflow-hidden" style={{ height: '320px', touchAction: 'none' }}>
                         <div className="absolute inset-0 paper-texture"></div>
                         <div ref={boardRef} className="absolute top-[50px] left-1/2 w-[800px] h-[200px] origin-top" style={{ transform: `translateX(-50%) scale(${boardScale})` }}>
-                            {slots.map(slot => ( <Slot key={slot.id} x={slot.x} y={slot.y} rotation={slot.r} isShape={currentLevel.type === 'shape'} /> ))}
+                            {slots.map(slot => ( <Slot key={slot.id} x={slot.x} y={slot.y} rotation={slot.r} /> ))}
                             {sticks.map(stick => ( <Stick key={stick.id} x={draggingId === stick.id ? mousePos.x : stick.x} y={draggingId === stick.id ? mousePos.y : stick.y} rotation={stick.rotation} isDragging={draggingId === stick.id} onMouseDown={(e) => startDrag(e, stick.id, stick.x, stick.y)} /> ))}
                         </div>
                         {gameState === 'won' && (
@@ -592,7 +556,6 @@
                             </div>
                         )}
                     </div>
-
                     <div className="w-full mt-6 grid grid-cols-2 gap-4">
                         <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
                             <div className="flex justify-between items-center mb-3">
