@@ -26,6 +26,7 @@
             filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.2));
         }
         
+        /* Dashed slot styling */
         .slot-dash {
             border: 2px dashed rgba(0,0,0,0.15);
         }
@@ -64,6 +65,10 @@
         };
 
         // --- Configuration ---
+
+        // Constants for precise geometry
+        const SL = 80; // Stick Length
+        const DIAG = 56; // Projected length for 45deg (80 * sin(45) approx 56.57) - rounded for pixel snapping
 
         // 7-segment positions (Relative to a 100x180 digit box)
         const SEG_TOP = [20, 0, 0];
@@ -148,95 +153,111 @@
         ];
 
         // 2. Shape Pool - COORDINATES FIXED for strict connectivity
-        // L=80. 45deg projection approx 56.
+        // Using integer approximations for diagonals (56px) to ensure no floating point skew
         const POOL_SHAPE = [
             {
                 id: 's1', type: 'shape', title: "游動的小魚", instruction: "移動 3 根火柴，讓魚向反方向游",
                 formula: "圖形題",
                 hint1: "魚頭現在向左，要把它變向右。", hint2: "移動魚鰭和下半部的身體。",
-                // Fish facing LEFT
-                // Head (Left Vertex): (344, 156)
-                // Body Diamond: Top(400,100), Right(456,156), Bot(400,212), Left(344,156)
-                // Fins: Top attached to Top Vertex. Bot attached to Bot Vertex.
-                // Tail: Attached to Right Vertex.
+                // Body Center approx at 400, 150
                 customSticks: [
-                    // Body Diamond
+                    // Body Diamond (Top vertex 400,100)
                     {x:400, y:100, r:45},  // Top-Right Side
-                    {x:456, y:156, r:135}, // Bot-Right Side
-                    {x:400, y:212, r:225}, // Bot-Left Side
-                    {x:344, y:156, r:315}, // Top-Left Side
-                    // Tail (on Right)
-                    {x:456, y:156, r:315}, // Tail Top (goes Right-Up)
-                    {x:456, y:156, r:45},  // Tail Bot (goes Right-Down)
-                    // Fins (on Body vertices)
-                    {x:400, y:100, r:225}, // Top Fin (Points Left-Up)
-                    {x:400, y:212, r:135}  // Bot Fin (Points Left-Down)
+                    {x:400+DIAG, y:100+DIAG, r:135}, // Bot-Right Side
+                    {x:400, y:100+2*DIAG, r:225}, // Bot-Left Side
+                    {x:400-DIAG, y:100+DIAG, r:315}, // Top-Left Side
+                    // Tail (on Right Vertex)
+                    {x:400+DIAG, y:100+DIAG, r:315}, // Tail Top (Right-Up)
+                    {x:400+DIAG, y:100+DIAG, r:45},  // Tail Bot (Right-Down)
+                    // Fins (on Vertices)
+                    {x:400, y:100, r:225}, // Top Fin (Left-Up)
+                    {x:400, y:100+2*DIAG, r:135}  // Bot Fin (Left-Down)
                 ],
-                // Target: Fish facing RIGHT
-                // Mirror of above. Head at Right Vertex. Tail at Left.
                 winSlots: [
                     // Body (Same)
-                    {x:400, y:100, r:45}, {x:456, y:156, r:135}, {x:400, y:212, r:225}, {x:344, y:156, r:315},
-                    // Tail (on Left)
-                    {x:344, y:156, r:225}, // Tail Top (Left-Up)
-                    {x:344, y:156, r:135}, // Tail Bot (Left-Down)
-                    // Fins (on Body, Pointing Right)
+                    {x:400, y:100, r:45}, {x:400+DIAG, y:100+DIAG, r:135}, 
+                    {x:400, y:100+2*DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:315},
+                    // Tail (on Left Vertex)
+                    {x:400-DIAG, y:100+DIAG, r:225}, // Tail Top (Left-Up)
+                    {x:400-DIAG, y:100+DIAG, r:135}, // Tail Bot (Left-Down)
+                    // Fins (on Vertices Pointing Right)
                     {x:400, y:100, r:315}, // Top Fin (Right-Up)
-                    {x:400, y:212, r:45}   // Bot Fin (Right-Down)
+                    {x:400, y:100+2*DIAG, r:45}   // Bot Fin (Right-Down)
                 ],
                 validSlots: [
-                    // All win slots + original slots
-                    {x:344, y:156, r:225}, {x:344, y:156, r:135}, {x:400, y:100, r:315}, {x:400, y:212, r:45},
-                    {x:456, y:156, r:315}, {x:456, y:156, r:45}, {x:400, y:100, r:225}, {x:400, y:212, r:135}
+                    // Include both orientations for slots
+                    {x:400-DIAG, y:100+DIAG, r:225}, {x:400-DIAG, y:100+DIAG, r:135}, // L Tail
+                    {x:400+DIAG, y:100+DIAG, r:315}, {x:400+DIAG, y:100+DIAG, r:45},  // R Tail
+                    {x:400, y:100, r:225}, {x:400, y:100, r:315}, // Top Fins L/R
+                    {x:400, y:100+2*DIAG, r:135}, {x:400, y:100+2*DIAG, r:45} // Bot Fins L/R
                 ]
             },
             {
                 id: 's2', type: 'shape', title: "兩個箭頭", instruction: "移動 2 根火柴，把兩個箭頭變成一個正方形",
                 formula: "圖形題",
                 hint1: "將兩個箭頭的尾部連起來。", hint2: "這是一個視錯覺，不需要完美的正方形，長方形(Box)也可以。",
-                // > > shape.
-                // Arrow 1 Tip at (256, 156). Arrow 2 Tip at (336, 156).
+                // Layout: > >
+                // Tip of first arrow at 200, 100.
                 customSticks: [
-                    // Arrow 1 (Left)
-                    {x:200, y:100, r:45},  // Top stick
-                    {x:200, y:212, r:315}, // Bot stick
+                    // Arrow 1 (Left) - Pointing Right >
+                    {x:200, y:100, r:45},  // Top Stick: \
+                    {x:200, y:100+2*DIAG, r:315}, // Bot Stick: / (starts low goes up-right)
+                    // Gap
                     // Arrow 2 (Right)
-                    {x:280, y:100, r:45}, 
-                    {x:280, y:212, r:315} 
+                    {x:200+SL, y:100, r:45}, 
+                    {x:200+SL, y:100+2*DIAG, r:315} 
                 ],
                 // Target: Square/Rect [ ]
                 // Top, Bot, Left, Right
                 winSlots: [
-                   {x:240, y:120, r:0}, // Top
-                   {x:240, y:200, r:0}, // Bot
-                   {x:200, y:120, r:90}, // Left
-                   {x:280, y:120, r:90}  // Right
+                   // The square uses the existing arrow heads as left/right sides? 
+                   // No, usually you close the open ends.
+                   // Let's assume standard square using vertical/horizontal
+                   {x:200+DIAG/2, y:100+DIAG/2, r:0}, // Top
+                   {x:200+DIAG/2, y:100+1.5*DIAG, r:0}, // Bot
+                   {x:200, y:100+DIAG, r:90}, // Left
+                   {x:200+SL, y:100+DIAG, r:90}  // Right
                 ],
+                // Just provide a grid of valid slots around the area
                 validSlots: [
-                    {x:240, y:120, r:0}, {x:240, y:200, r:0}, {x:200, y:120, r:90}, {x:280, y:120, r:90}
+                    {x:200+DIAG/2, y:100+DIAG/2, r:0}, {x:200+DIAG/2, y:100+1.5*DIAG, r:0},
+                    {x:200, y:100+DIAG, r:90}, {x:200+SL, y:100+DIAG, r:90},
+                    // Also diagonals
+                    {x:200, y:100, r:45}, {x:200, y:100+2*DIAG, r:315},
+                    {x:200+SL, y:100, r:45}, {x:200+SL, y:100+2*DIAG, r:315}
                 ]
             },
             {
                 id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
                 formula: "圖形題",
                 hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
-                // [ ][ ][ ]
+                // [ ][ ][ ] - Strict 80px grid
                 customSticks: [
-                    // Top Row
+                    // Top Row: 3 sticks
                     {x:100, y:100, r:0}, {x:180, y:100, r:0}, {x:260, y:100, r:0},
-                    // Bot Row
+                    // Bot Row: 3 sticks
                     {x:100, y:180, r:0}, {x:180, y:180, r:0}, {x:260, y:180, r:0},
-                    // Verts
+                    // Verts: 4 sticks (at 100, 180, 260, 340)
                     {x:100, y:100, r:90}, {x:180, y:100, r:90}, {x:260, y:100, r:90}, {x:340, y:100, r:90}
                 ],
+                // Target: [ ] ... [ ] (Two separated squares)
                 winSlots: [
-                    // Left Square
+                    // Left Square (100,100)
                     {x:100, y:100, r:0}, {x:100, y:180, r:0}, {x:100, y:100, r:90}, {x:180, y:100, r:90},
-                    // Right Square (Far Right)
+                    // Right Square (340, 100) - Start at 340? No, 3rd square started at 260.
+                    // If we remove middle square (180 to 260).
+                    // We form a new square at 340?
+                    // Previous squares: 100-180, 180-260, 260-340.
+                    // New square at 340-420.
                     {x:340, y:100, r:0}, {x:340, y:180, r:0}, {x:340, y:100, r:90}, {x:420, y:100, r:90}
                 ],
                 validSlots: [
-                   {x:340, y:100, r:0}, {x:340, y:180, r:0}, {x:420, y:100, r:90}
+                   // All grid positions for 4 slots wide
+                   // Horizontals
+                   {x:100, y:100, r:0}, {x:180, y:100, r:0}, {x:260, y:100, r:0}, {x:340, y:100, r:0},
+                   {x:100, y:180, r:0}, {x:180, y:180, r:0}, {x:260, y:180, r:0}, {x:340, y:180, r:0},
+                   // Verticals
+                   {x:100, y:100, r:90}, {x:180, y:100, r:90}, {x:260, y:100, r:90}, {x:340, y:100, r:90}, {x:420, y:100, r:90}
                 ]
             }
         ];
@@ -287,10 +308,6 @@
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             items.forEach(item => {
                 const rad = (item.r || item.rotation || 0) * Math.PI / 180;
-                // Stick length 80, height 10. Pivot at 5,5 (relative to top left).
-                // Actually Stick component uses transformOrigin 5px 5px.
-                // It draws from 0,0 to 80,10.
-                // We simplify: projected length ~80.
                 const p1x = item.x, p1y = item.y;
                 const p2x = item.x + 80 * Math.cos(rad);
                 const p2y = item.y + 80 * Math.sin(rad);
@@ -346,29 +363,27 @@
                 });
             }
 
-            // 2. Calculate Center
+            // 2. Calculate Center with Integer Rounding
             const bounds = calculateBounds(rawItems);
             const contentW = bounds.maxX - bounds.minX;
             const contentH = bounds.maxY - bounds.minY;
             
             const containerW = 800;
             const containerH = 320;
-            const shiftX = (containerW - contentW) / 2 - bounds.minX;
-            const shiftY = (containerH - contentH) / 2 - bounds.minY;
+            // CRITICAL FIX: Round the shift to prevent sub-pixel rendering (blur/skew)
+            const shiftX = Math.round((containerW - contentW) / 2 - bounds.minX);
+            const shiftY = Math.round((containerH - contentH) / 2 - bounds.minY);
 
             // 3. Create Final Entities
             rawItems.forEach(item => {
                 if (item.type === 'stick') {
-                    // Find matching slot or create one?
-                    // For Math, slots are pre-created. For shape, sticks have pos.
-                    // We need a slot for every stick initial pos.
                     const slotId = `slot_init_${idCounter}`;
                     if (levelData.type === 'shape') {
                         slots.push({ id: slotId, x: item.x + shiftX, y: item.y + shiftY, r: item.r, type: 'shape' });
                     }
                     sticks.push({
                         id: `stick_${idCounter++}`,
-                        slotId: levelData.type === 'shape' ? slotId : null, // Math links dynamically
+                        slotId: levelData.type === 'shape' ? slotId : null, 
                         x: item.x + shiftX, 
                         y: item.y + shiftY, 
                         rotation: item.r, 
@@ -533,12 +548,7 @@
                 if (!currentLevel) return;
 
                 if (currentLevel.type === 'shape') {
-                    const baseY = 50; // Not used as we shifted everything. Use normalized relative.
-                    // We must check if Win Slots are occupied.
-                    // Win Slots are defined in raw coords (without shift).
-                    // Sticks are in shifted coords.
-                    // Need to unshift sticks or shift win slots.
-                    
+                    const baseY = 50; 
                     let matchCount = 0;
                     const required = currentLevel.winSlots.length;
                     
