@@ -16,7 +16,7 @@
         body {
             font-family: 'Fredoka', sans-serif;
             touch-action: none; /* Prevent scrolling on iPad while dragging */
-            background-color: #d8d4c7;
+            background-color: #d8d4c7; /* Softer, slightly vintage background */
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden; /* Prevent body scroll */
@@ -97,23 +97,11 @@
         const OP_EQUAL = [[10, 65, 0], [10, 95, 0]];
 
         // --- VALIDATION HELPER ---
-        // Generic checker for A +/- B = C or A +/- B = C +/- D
         const checkMath = (values, ops) => {
             if (values.length === 3 && ops.length === 1) {
-                // A op B = C
                 const res = ops[0] === '+' ? values[0] + values[1] : values[0] - values[1];
                 return res === values[2];
             } 
-            if (values.length === 5 && ops.length === 1) {
-                // Double digit math (implicit 2 digits per number usually in this game's logic for 30th)
-                // Actually the parser flattens digits.
-                // e.g. 26 + 4 = 20 -> values [2,6, 4, 2,0]
-                // Construct numbers based on context? 
-                // The levels have fixed structure. We can try to interpret based on length.
-                // But for 30th anniversary, it's mostly Double +/- Single = Double.
-                // Let's rely on specific level checks for complex ones, but generic for simple ones.
-                return false;
-            }
             return false;
         };
 
@@ -131,19 +119,16 @@
                 id: 'm2', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "9 + 3 = 6",
                 hint1: "嘗試把 9 變小。", hint2: "把 9 的左上角火柴移到 6 的缺口，讓它變成 8。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 3, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 6, x: 460 }],
-                // Target: 5 + 3 = 8
                 check: (values, ops) => checkMath(values, ops)
             },
             {
                 id: 'm3', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
                 hint1: "這題有多個解法！試試把加號變減號？", hint2: "解法一：8 - 4 = 4。解法二：0 + 4 = 4。",
                 layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 4, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 4, x: 460 }],
-                // Supports 0+4=4 AND 8-4=4
                 check: (values, ops) => checkMath(values, ops)
             },
             {
                 id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
-                // Replaced 9+9=0 with a solid one. Target: 3 + 5 = 8.
                 hint1: "減法變加法？", hint2: "把 9 變成 3，減號變加號。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
                 check: (values, ops) => checkMath(values, ops)
@@ -152,78 +137,106 @@
                 id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
                 hint1: "加法變減法？", hint2: "把加號的一根火柴移到 5 上，讓它變成 9。",
                 layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
-                check: (values, ops) => checkMath(values, ops) // 9 - 7 = 2
+                check: (values, ops) => checkMath(values, ops)
             },
             {
                 id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
                 hint1: "試試看 3 加 0。", hint2: "把 6 變成 0。",
                 layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
-                // Supports 3+0=3 AND 9-6=3
                 check: (values, ops) => checkMath(values, ops)
             }
         ];
 
-        // 2. Shape Pool
+        // 2. Shape Pool - COORDINATES FIXED for strict connectivity
+        // L=80. 45deg projection approx 56.
         const POOL_SHAPE = [
             {
                 id: 's1', type: 'shape', title: "游動的小魚", instruction: "移動 3 根火柴，讓魚向反方向游",
                 formula: "圖形題",
                 hint1: "魚頭現在向左，要把它變向右。", hint2: "移動魚鰭和下半部的身體。",
+                // Fish facing LEFT
+                // Head (Left Vertex): (344, 156)
+                // Body Diamond: Top(400,100), Right(456,156), Bot(400,212), Left(344,156)
+                // Fins: Top attached to Top Vertex. Bot attached to Bot Vertex.
+                // Tail: Attached to Right Vertex.
                 customSticks: [
-                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, 
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, 
-                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, 
-                    {x:400, y:100, r:45}, {x:400, y:160, r:135} 
+                    // Body Diamond
+                    {x:400, y:100, r:45},  // Top-Right Side
+                    {x:456, y:156, r:135}, // Bot-Right Side
+                    {x:400, y:212, r:225}, // Bot-Left Side
+                    {x:344, y:156, r:315}, // Top-Left Side
+                    // Tail (on Right)
+                    {x:456, y:156, r:315}, // Tail Top (goes Right-Up)
+                    {x:456, y:156, r:45},  // Tail Bot (goes Right-Down)
+                    // Fins (on Body vertices)
+                    {x:400, y:100, r:225}, // Top Fin (Points Left-Up)
+                    {x:400, y:212, r:135}  // Bot Fin (Points Left-Down)
                 ],
+                // Target: Fish facing RIGHT
+                // Mirror of above. Head at Right Vertex. Tail at Left.
                 winSlots: [
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, 
-                    {x:320, y:130, r:90}, {x:380, y:130, r:90}, 
-                    {x:400, y:80, r:135}, {x:400, y:180, r:45}, 
-                    {x:300, y:100, r:135}, {x:300, y:160, r:45} 
+                    // Body (Same)
+                    {x:400, y:100, r:45}, {x:456, y:156, r:135}, {x:400, y:212, r:225}, {x:344, y:156, r:315},
+                    // Tail (on Left)
+                    {x:344, y:156, r:225}, // Tail Top (Left-Up)
+                    {x:344, y:156, r:135}, // Tail Bot (Left-Down)
+                    // Fins (on Body, Pointing Right)
+                    {x:400, y:100, r:315}, // Top Fin (Right-Up)
+                    {x:400, y:212, r:45}   // Bot Fin (Right-Down)
                 ],
                 validSlots: [
-                    {x:300, y:80, r:45}, {x:300, y:180, r:135}, {x:400, y:80, r:135}, {x:400, y:180, r:45}, 
-                    {x:400, y:100, r:45}, {x:400, y:160, r:135}, {x:300, y:100, r:135}, {x:300, y:160, r:45}, 
-                    {x:350, y:100, r:0}, {x:350, y:160, r:0}, {x:320, y:130, r:90}, {x:380, y:130, r:90} 
+                    // All win slots + original slots
+                    {x:344, y:156, r:225}, {x:344, y:156, r:135}, {x:400, y:100, r:315}, {x:400, y:212, r:45},
+                    {x:456, y:156, r:315}, {x:456, y:156, r:45}, {x:400, y:100, r:225}, {x:400, y:212, r:135}
                 ]
             },
             {
                 id: 's2', type: 'shape', title: "兩個箭頭", instruction: "移動 2 根火柴，把兩個箭頭變成一個正方形",
                 formula: "圖形題",
                 hint1: "將兩個箭頭的尾部連起來。", hint2: "這是一個視錯覺，不需要完美的正方形，長方形(Box)也可以。",
+                // > > shape.
+                // Arrow 1 Tip at (256, 156). Arrow 2 Tip at (336, 156).
                 customSticks: [
-                    {x:200, y:100, r:45}, {x:200, y:160, r:135}, 
-                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, 
-                    {x:350, y:100, r:135}, {x:350, y:160, r:45}, 
+                    // Arrow 1 (Left)
+                    {x:200, y:100, r:45},  // Top stick
+                    {x:200, y:212, r:315}, // Bot stick
+                    // Arrow 2 (Right)
+                    {x:280, y:100, r:45}, 
+                    {x:280, y:212, r:315} 
                 ],
+                // Target: Square/Rect [ ]
+                // Top, Bot, Left, Right
                 winSlots: [
-                   {x:250, y:90, r:0}, {x:250, y:170, r:0}, 
-                   {x:210, y:130, r:90}, {x:290, y:130, r:90} 
+                   {x:240, y:120, r:0}, // Top
+                   {x:240, y:200, r:0}, // Bot
+                   {x:200, y:120, r:90}, // Left
+                   {x:280, y:120, r:90}  // Right
                 ],
                 validSlots: [
-                    {x:250, y:100, r:135}, {x:250, y:160, r:45}, {x:350, y:100, r:135}, {x:350, y:160, r:45}, 
-                    {x:300, y:80, r:0}, {x:300, y:180, r:0}, {x:260, y:130, r:90}, {x:340, y:130, r:90}, 
-                    {x:290, y:90, r:0}, {x:290, y:170, r:0}, {x:250, y:130, r:90}, {x:330, y:130, r:90},
+                    {x:240, y:120, r:0}, {x:240, y:200, r:0}, {x:200, y:120, r:90}, {x:280, y:120, r:90}
                 ]
             },
             {
                 id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
                 formula: "圖形題",
                 hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
+                // [ ][ ][ ]
                 customSticks: [
-                    {x:200, y:100, r:0}, {x:280, y:100, r:0}, {x:360, y:100, r:0},
-                    {x:200, y:180, r:0}, {x:280, y:180, r:0}, {x:360, y:180, r:0},
-                    {x:160, y:140, r:90}, {x:240, y:140, r:90}, {x:320, y:140, r:90}, {x:400, y:140, r:90}
+                    // Top Row
+                    {x:100, y:100, r:0}, {x:180, y:100, r:0}, {x:260, y:100, r:0},
+                    // Bot Row
+                    {x:100, y:180, r:0}, {x:180, y:180, r:0}, {x:260, y:180, r:0},
+                    // Verts
+                    {x:100, y:100, r:90}, {x:180, y:100, r:90}, {x:260, y:100, r:90}, {x:340, y:100, r:90}
                 ],
                 winSlots: [
-                    {x:200, y:100, r:0}, {x:200, y:180, r:0}, {x:160, y:140, r:90}, {x:240, y:140, r:90},
-                    {x:400, y:100, r:0}, {x:400, y:180, r:0}, {x:360, y:140, r:90}, {x:440, y:140, r:90}
+                    // Left Square
+                    {x:100, y:100, r:0}, {x:100, y:180, r:0}, {x:100, y:100, r:90}, {x:180, y:100, r:90},
+                    // Right Square (Far Right)
+                    {x:340, y:100, r:0}, {x:340, y:180, r:0}, {x:340, y:100, r:90}, {x:420, y:100, r:90}
                 ],
                 validSlots: [
-                   {x:200, y:100, r:0}, {x:280, y:100, r:0}, {x:360, y:100, r:0},
-                   {x:200, y:180, r:0}, {x:280, y:180, r:0}, {x:360, y:180, r:0},
-                   {x:160, y:140, r:90}, {x:240, y:140, r:90}, {x:320, y:140, r:90}, {x:400, y:140, r:90},
-                   {x:400, y:100, r:0}, {x:400, y:180, r:0}, {x:440, y:140, r:90}, {x:360, y:140, r:90}
+                   {x:340, y:100, r:0}, {x:340, y:180, r:0}, {x:420, y:100, r:90}
                 ]
             }
         ];
@@ -269,110 +282,129 @@
             return [...math, ...shape, ...special];
         };
 
+        // Improved Bounding Box Calculation including Rotation
+        const calculateBounds = (items) => {
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            items.forEach(item => {
+                const rad = (item.r || item.rotation || 0) * Math.PI / 180;
+                // Stick length 80, height 10. Pivot at 5,5 (relative to top left).
+                // Actually Stick component uses transformOrigin 5px 5px.
+                // It draws from 0,0 to 80,10.
+                // We simplify: projected length ~80.
+                const p1x = item.x, p1y = item.y;
+                const p2x = item.x + 80 * Math.cos(rad);
+                const p2y = item.y + 80 * Math.sin(rad);
+                minX = Math.min(minX, p1x, p2x);
+                maxX = Math.max(maxX, p1x, p2x);
+                minY = Math.min(minY, p1y, p2y);
+                maxY = Math.max(maxY, p1y, p2y);
+            });
+            return { minX, maxX, minY, maxY };
+        };
+
         const generateSticks = (levelData) => {
             let sticks = [];
             let slots = [];
             let idCounter = 0;
-            let minX = Infinity;
-            let maxX = -Infinity;
-
-            // 1. Calculate Bounds
+            
+            // 1. Generate Raw Items
+            let rawItems = [];
             if (levelData.type === 'shape') {
-                // For shapes, iterate through validSlots and customSticks to find bounds
-                const allItems = [...levelData.customSticks, ...(levelData.validSlots || [])];
-                allItems.forEach(item => {
-                    if (item.x < minX) minX = item.x;
-                    if (item.x + 80 > maxX) maxX = item.x + 80; // stick length approx 80
-                });
+                rawItems = [...levelData.customSticks.map(s => ({...s, type: 'stick'})), 
+                            ...(levelData.validSlots || []).map(s => ({...s, type: 'slot'}))];
             } else {
-                levelData.layout.forEach(part => {
-                    if (part.x < minX) minX = part.x;
-                    const width = part.type === 'digit' ? 110 : 80;
-                    if (part.x + width > maxX) maxX = part.x + width;
-                });
-            }
-
-            const contentWidth = maxX - minX;
-            const containerWidth = 800;
-            const shiftX = (containerWidth - contentWidth) / 2 - minX;
-
-            // 2. Generate
-            if (levelData.type === 'shape') {
-                const baseY = 50; // Shape offset
-                
-                // Add Sticks
-                levelData.customSticks.forEach(s => {
-                    // Create matching slot for initial position
-                     slots.push({
-                        id: `slot_init_${idCounter}`,
-                        x: s.x + shiftX, y: s.y + baseY, r: s.r,
-                        type: 'shape'
-                    });
-                    
-                    sticks.push({
-                        id: `stick_${idCounter++}`,
-                        slotId: `slot_init_${idCounter-1}`, // bind to the slot we just made
-                        x: s.x + shiftX, y: s.y + baseY, rotation: s.r,
-                        color: 'bg-orange-600'
-                    });
-                });
-
-                // Add Extra Valid Slots
-                if (levelData.validSlots) {
-                    levelData.validSlots.forEach((s, idx) => {
-                        const exists = slots.some(ex => Math.abs(ex.x - (s.x + shiftX)) < 5 && Math.abs(ex.y - (s.y + baseY)) < 5);
-                        if (!exists) {
-                            slots.push({
-                                id: `slot_extra_${idx}`,
-                                x: s.x + shiftX, y: s.y + baseY, r: s.r,
-                                type: 'shape'
-                            });
-                        }
-                    });
-                }
-            } else {
-                // Math Logic
                 levelData.layout.forEach((part, partIndex) => {
-                    let baseX = part.x + shiftX;
-                    let baseY = 30;
-
+                    let baseX = part.x; 
+                    let baseY = 0; // Relative
                     if (part.type === 'digit') {
                         SEGMENT_POSITIONS.forEach((pos, segIndex) => {
-                            const slotId = `slot_${partIndex}_${segIndex}`;
-                            const isPresent = DIGIT_MAP[part.value].includes(segIndex);
-                            slots.push({ id: slotId, x: baseX + pos[0], y: baseY + pos[1], r: pos[2], partIndex, segmentIndex: segIndex });
-                            if (isPresent) {
-                                sticks.push({ id: `stick_${idCounter++}`, slotId, x: baseX + pos[0], y: baseY + pos[1], rotation: pos[2], color: 'bg-orange-600' });
+                            rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex, segmentIndex: segIndex });
+                            if (DIGIT_MAP[part.value].includes(segIndex)) {
+                                rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'stick' });
                             }
                         });
                     } else if (part.type === 'op') {
-                        if (part.value === '+' || part.value === '-') {
-                            OP_PLUS.forEach((pos, segIndex) => {
-                                const type = segIndex === 0 ? 'plus_vert' : 'plus_horiz';
-                                const slotId = `slot_${partIndex}_${type}`;
-                                slots.push({ id: slotId, x: baseX + pos[0], y: baseY + pos[1], r: pos[2], partIndex, type });
-                                
-                                let addStick = false;
-                                if (part.value === '+') addStick = true;
-                                else if (part.value === '-' && segIndex === 1) addStick = true;
-
-                                if (addStick) {
-                                    sticks.push({ id: `stick_${idCounter++}`, slotId, x: baseX + pos[0], y: baseY + pos[1], rotation: pos[2], color: 'bg-orange-600' });
-                                }
-                            });
-                        } else {
-                            OP_EQUAL.forEach((pos, segIndex) => {
-                                const slotId = `slot_${partIndex}_${segIndex}`;
-                                slots.push({ id: slotId, x: baseX + pos[0], y: baseY + pos[1], r: pos[2], partIndex });
-                                sticks.push({ id: `stick_${idCounter++}`, slotId, x: baseX + pos[0], y: baseY + pos[1], rotation: pos[2] });
-                            });
-                        }
+                        const ops = part.value === '=' ? OP_EQUAL : OP_PLUS;
+                        ops.forEach((pos, segIndex) => {
+                            // Filter for Minus
+                            if (part.value === '-' && segIndex === 0) return; // Skip vertical for minus
+                            // Add Slots
+                            if (part.value !== '=') {
+                                // Add both V and H slots for + and - to allow change
+                                OP_PLUS.forEach((p, idx) => {
+                                    rawItems.push({ x: baseX + p[0], y: baseY + p[1], r: p[2], type: 'slot', partIndex, opType: idx===0?'vert':'horiz' });
+                                });
+                            } else {
+                                rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'slot', partIndex });
+                            }
+                            // Add Stick
+                            if (part.value === '+' || part.value === '=' || (part.value === '-' && segIndex === 1)) {
+                                rawItems.push({ x: baseX + pos[0], y: baseY + pos[1], r: pos[2], type: 'stick' });
+                            }
+                        });
                     }
                 });
             }
+
+            // 2. Calculate Center
+            const bounds = calculateBounds(rawItems);
+            const contentW = bounds.maxX - bounds.minX;
+            const contentH = bounds.maxY - bounds.minY;
+            
+            const containerW = 800;
+            const containerH = 320;
+            const shiftX = (containerW - contentW) / 2 - bounds.minX;
+            const shiftY = (containerH - contentH) / 2 - bounds.minY;
+
+            // 3. Create Final Entities
+            rawItems.forEach(item => {
+                if (item.type === 'stick') {
+                    // Find matching slot or create one?
+                    // For Math, slots are pre-created. For shape, sticks have pos.
+                    // We need a slot for every stick initial pos.
+                    const slotId = `slot_init_${idCounter}`;
+                    if (levelData.type === 'shape') {
+                        slots.push({ id: slotId, x: item.x + shiftX, y: item.y + shiftY, r: item.r, type: 'shape' });
+                    }
+                    sticks.push({
+                        id: `stick_${idCounter++}`,
+                        slotId: levelData.type === 'shape' ? slotId : null, // Math links dynamically
+                        x: item.x + shiftX, 
+                        y: item.y + shiftY, 
+                        rotation: item.r, 
+                        color: 'bg-orange-600'
+                    });
+                } else if (item.type === 'slot') {
+                    slots.push({
+                        id: `slot_${idCounter++}`,
+                        x: item.x + shiftX,
+                        y: item.y + shiftY,
+                        r: item.r,
+                        ...item
+                    });
+                }
+            });
+            
+            // For Math, link sticks to nearest slot initially
+            if (levelData.type !== 'shape') {
+                sticks.forEach(stick => {
+                    const match = slots.find(s => Math.abs(s.x - stick.x) < 5 && Math.abs(s.y - stick.y) < 5 && s.r === stick.rotation);
+                    if (match) stick.slotId = match.id;
+                });
+            }
+
             // Dedup slots
-            slots = slots.filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
-            return { sticks, slots, shiftX };
+            const uniqueSlots = [];
+            const seen = new Set();
+            slots.forEach(s => {
+                const key = `${Math.round(s.x)},${Math.round(s.y)},${s.r}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueSlots.push(s);
+                }
+            });
+
+            return { sticks, slots: uniqueSlots, shiftX, shiftY };
         };
 
         const Stick = ({ x, y, rotation, isDragging, onMouseDown }) => (
@@ -411,7 +443,7 @@
             const [hintLevel, setHintLevel] = useState(0);
             const [boardScale, setBoardScale] = useState(1);
             const [levels, setLevels] = useState([]);
-            const [shiftX, setShiftX] = useState(0); // Store shift for win checking
+            const [offsets, setOffsets] = useState({x:0, y:0});
 
             const boardRef = useRef(null);
             const gameAreaRef = useRef(null);
@@ -437,16 +469,15 @@
             }, []);
 
             const loadLevelData = (levelData) => {
-                const { sticks: initSticks, slots: initSlots, shiftX: sX } = generateSticks(levelData);
+                const { sticks: initSticks, slots: initSlots, shiftX, shiftY } = generateSticks(levelData);
                 setSticks(initSticks);
                 setSlots(initSlots);
-                setShiftX(sX);
+                setOffsets({x: shiftX, y: shiftY});
                 setMovesCount(0);
                 setGameState('playing');
                 setHintLevel(0);
             };
 
-            // ... Drag Logic (Same as before) ...
             const handleMove = (e) => {
                 if (!draggingId || !boardRef.current) return;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -502,24 +533,28 @@
                 if (!currentLevel) return;
 
                 if (currentLevel.type === 'shape') {
-                    // Shape Logic
-                    const baseY = 50; 
+                    const baseY = 50; // Not used as we shifted everything. Use normalized relative.
+                    // We must check if Win Slots are occupied.
+                    // Win Slots are defined in raw coords (without shift).
+                    // Sticks are in shifted coords.
+                    // Need to unshift sticks or shift win slots.
+                    
                     let matchCount = 0;
                     const required = currentLevel.winSlots.length;
                     
                     currentLevel.winSlots.forEach(ws => {
-                        const targetX = ws.x + shiftX;
-                        const targetY = ws.y + baseY;
+                        const targetX = ws.x + offsets.x;
+                        const targetY = ws.y + offsets.y;
                         
                         const hasStick = currentSticks.some(s => 
-                            Math.abs(s.x - targetX) < 10 && 
-                            Math.abs(s.y - targetY) < 10 &&
-                            Math.abs(s.rotation - ws.r) < 5
+                            Math.abs(s.x - targetX) < 15 && 
+                            Math.abs(s.y - targetY) < 15 &&
+                            Math.abs(s.rotation - ws.r) < 10
                         );
                         if (hasStick) matchCount++;
                     });
 
-                    if (matchCount === required && matchCount === currentSticks.length) {
+                    if (matchCount >= required && currentSticks.length === required) {
                         setGameState('won');
                         new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg').play().catch(e=>{});
                     }
@@ -531,8 +566,8 @@
                         const slot = slots.find(sl => sl.id === s.slotId);
                         if (slot) {
                             if (!filledSlots[slot.partIndex]) filledSlots[slot.partIndex] = [];
-                            if (slot.type === 'plus_vert') filledSlots[slot.partIndex].push('vert');
-                            else if (slot.type === 'plus_horiz') filledSlots[slot.partIndex].push('horiz');
+                            if (slot.opType === 'vert') filledSlots[slot.partIndex].push('vert');
+                            else if (slot.opType === 'horiz') filledSlots[slot.partIndex].push('horiz');
                             else filledSlots[slot.partIndex].push(slot.segmentIndex);
                         }
                     });
