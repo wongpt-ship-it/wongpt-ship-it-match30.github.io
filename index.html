@@ -19,25 +19,11 @@
             background-color: #fef3c7;
             user-select: none;
             -webkit-user-select: none;
+            overflow: hidden; /* Prevent body scroll */
         }
         
-        .wood-texture {
-            background-color: #d97706;
-            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b45309' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20H20v-1.41zM20 21.4l2.83 2.83 1.41-1.41L21.41 20H20v1.41z'/%3E%3C/g%3E%3C/svg%3E");
-        }
-
         .stick-shadow {
             filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
-        }
-
-        /* Prevent text selection */
-        .no-select {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
         
         @keyframes float {
@@ -58,12 +44,6 @@
 
         // --- Data & Configuration ---
 
-        // 7-segment representation: 
-        //   0
-        // 1   2
-        //   3
-        // 4   5
-        //   6
         const DIGIT_MAP = {
             0: [0, 1, 2, 4, 5, 6],
             1: [2, 5],
@@ -74,11 +54,9 @@
             6: [0, 1, 3, 4, 5, 6],
             7: [0, 2, 5],
             8: [0, 1, 2, 3, 4, 5, 6],
-            9: [0, 1, 2, 3, 5, 6] // or [0,1,2,3,5]
+            9: [0, 1, 2, 3, 5, 6] 
         };
 
-        // Positions for segments in a 100x180 box
-        // [x, y, rotation(0=horiz, 90=vert)]
         const SEGMENT_POSITIONS = [
             [20, 0, 0],   // 0: Top
             [10, 20, 90], // 1: Top-Left
@@ -103,9 +81,6 @@
             [10, 95, 0]
         ];
 
-        // Level Definitions
-        // format: type: 'eq' (equation), parts: array of {type: 'digit'|'op', val: initialValue, id: unique}
-        // solution: validation function or target state
         const LEVELS = [
             {
                 id: 1,
@@ -122,15 +97,12 @@
                     { type: 'digit', value: 8, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values) => values[0] + values[2] === values[4] // 3 + 5 = 8
+                check: (values) => values[0] + values[2] === values[4] 
             },
             {
                 id: 2,
                 title: "加減法",
                 instruction: "移動 1 根火柴，使等式成立",
-                formula: "8 + 3 = 5", // Invalid
-                hint1: "試試看改變運算符號。",
-                hint2: "把 8 中間的火柴移到 5 的缺口變成 9，8 變成 0? 不對。試試 9-3=6? 試試 8-3=5。",
                 formula: "3 + 3 = 8",
                 hint1: "8 很大，不需要變動。嘗試把其中一個 3 變大。",
                 hint2: "把第一個 3 的右上角火柴移到左上角，變成 5。",
@@ -142,13 +114,12 @@
                     { type: 'digit', value: 8, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values) => values[0] + values[2] === values[4] // 5 + 3 = 8
+                check: (values) => values[0] + values[2] === values[4] 
             },
             {
                 id: 3,
                 title: "減法挑戰",
                 instruction: "移動 1 根火柴，使等式成立",
-                formula: "9 - 5 = 8", 
                 formula: "5 + 7 = 2",
                 hint1: "加法變減法？",
                 hint2: "把加號的一根火柴移到 5 上，讓它變成 9。",
@@ -160,9 +131,7 @@
                     { type: 'digit', value: 2, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values, ops) => {
-                     return values[0] - values[2] === values[4];
-                }
+                check: (values, ops) => values[0] - values[2] === values[4]
             },
             {
                 id: 4,
@@ -179,7 +148,7 @@
                     { type: 'digit', value: 6, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values) => values[0] - values[2] === values[4] // 9 - 3 = 6
+                check: (values) => values[0] - values[2] === values[4] 
             },
             {
                 id: 5,
@@ -196,7 +165,7 @@
                     { type: 'digit', value: 6, x: 460 }
                 ],
                 maxMoves: 1,
-                check: (values) => values[0] + values[2] === values[4] // 3 + 5 = 8
+                check: (values) => values[0] + values[2] === values[4] 
             },
             // --- 30th Anniversary Levels ---
             {
@@ -216,7 +185,7 @@
                     { type: 'digit', value: 0, x: 560 }
                 ],
                 maxMoves: 1,
-                check: (values) => (values[0]*10 + values[1]) + values[2] === 30 // 26 + 4 = 30
+                check: (values) => (values[0]*10 + values[1]) + values[2] === 30 
             },
             {
                 id: 7,
@@ -260,7 +229,7 @@
                 id: 9,
                 title: "三十週年 (四)",
                 instruction: "移動 1 根火柴，使等式成立",
-                formula: "39 - 9 = 36", // 30
+                formula: "39 - 9 = 36", 
                 hint1: "這是一條簡單的減法。",
                 hint2: "把 36 的 6 變成 0。",
                 layout: [
@@ -301,36 +270,30 @@
 
         const generateSticks = (levelData) => {
             let sticks = [];
-            let slots = []; // Places where sticks CAN go (ghost slots)
+            let slots = []; 
             let idCounter = 0;
 
             // --- Auto Centering Logic ---
-            // 1. Calculate content bounds
             let minX = Infinity;
             let maxX = -Infinity;
             
-            // Basic check for bounds based on parts
-            // Digits are approx 100 wide, Ops are approx 60-100 wide.
-            // Let's iterate through layout to find exact bounds
             levelData.layout.forEach(part => {
                 if (part.x < minX) minX = part.x;
-                // Estimate width: Digit ~110px (0-90 + 20pad), Op ~60px
                 const width = part.type === 'digit' ? 110 : 80; 
                 if (part.x + width > maxX) maxX = part.x + width;
             });
 
             const contentWidth = maxX - minX;
-            const containerWidth = 800; // The fixed width of the logic container
+            const containerWidth = 800; 
             const startOffset = (containerWidth - contentWidth) / 2;
             const shiftX = startOffset - minX;
             // -----------------------------
 
             levelData.layout.forEach((part, partIndex) => {
-                let baseX = part.x + shiftX; // Apply shift here
-                let baseY = 100; // Center Y vertically roughly
+                let baseX = part.x + shiftX; 
+                let baseY = 30; // UPDATED: Move higher (was 100) to prevent bottom cutoff
                 
                 if (part.type === 'digit') {
-                    // Create all 7 slots for this digit position
                     SEGMENT_POSITIONS.forEach((pos, segIndex) => {
                         const slotId = `slot_${partIndex}_${segIndex}`;
                         const isPresent = DIGIT_MAP[part.value].includes(segIndex);
@@ -340,8 +303,8 @@
                             x: baseX + pos[0],
                             y: baseY + pos[1],
                             rotation: pos[2],
-                            partIndex: partIndex, // Which digit/op this belongs to
-                            segmentIndex: segIndex // Which segment of the digit
+                            partIndex: partIndex,
+                            segmentIndex: segIndex 
                         });
 
                         if (isPresent) {
@@ -356,14 +319,8 @@
                         }
                     });
                 } else if (part.type === 'op') {
-                    // Operations
-                    let positions = part.value === '+' ? OP_PLUS : (part.value === '-' ? OP_MINUS : OP_EQUAL);
-                    
                     if (part.value === '+' || part.value === '-') {
                          OP_PLUS.forEach((pos, segIndex) => {
-                            const slotId = `slot_${partIndex}_${segIndex}`;
-                            
-                            // Let's manually define slots for +/-
                             // Vert slot
                             slots.push({
                                 id: `slot_${partIndex}_vert`,
@@ -407,7 +364,6 @@
                     }
                 }
             });
-            // Filter duplicate slots if any (due to loops)
             slots = slots.filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
             return { sticks, slots };
         };
@@ -423,28 +379,25 @@
                         top: y,
                         width: '80px',
                         height: '10px',
-                        backgroundColor: isDragging ? '#fbbf24' : '#d97706', // Amber-400 drag, Amber-600 normal
+                        backgroundColor: isDragging ? '#fbbf24' : '#d97706',
                         borderRadius: '5px',
                         transform: `rotate(${rotation}deg)`,
-                        transformOrigin: '5px 5px', // Pivot around start
+                        transformOrigin: '5px 5px',
                         cursor: 'pointer',
                         zIndex: isDragging ? 50 : 10,
                         touchAction: 'none'
                     }}
                     className={`flex items-center ${isDragging ? 'shadow-2xl scale-110' : 'stick-shadow'} transition-transform duration-100`}
                 >
-                    {/* Match head */}
                     <div style={{
                         width: '12px',
                         height: '14px',
-                        backgroundColor: '#ef4444', // Red-500
+                        backgroundColor: '#ef4444',
                         borderRadius: '50%',
                         position: 'absolute',
                         left: '-2px',
                         top: '-2px'
                     }}></div>
-                    
-                    {/* Wood grain effect details */}
                     <div className="w-full h-full opacity-30 bg-black/10 rounded-full"></div>
                 </div>
             );
@@ -469,7 +422,6 @@
             );
         };
 
-        // Main Game Component
         const App = () => {
             const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
             const [sticks, setSticks] = useState([]);
@@ -478,16 +430,34 @@
             const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
             const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
             const [movesCount, setMovesCount] = useState(0);
-            const [gameState, setGameState] = useState('playing'); // playing, won
-            const [hintLevel, setHintLevel] = useState(0); // 0: none, 1: text, 2: highlight
-            const gameAreaRef = useRef(null);
+            const [gameState, setGameState] = useState('playing'); 
+            const [hintLevel, setHintLevel] = useState(0); 
+            const [boardScale, setBoardScale] = useState(1); // Dynamic scale state
+            
+            const boardRef = useRef(null); 
+            const gameAreaRef = useRef(null); 
 
             const currentLevel = LEVELS[currentLevelIdx];
 
-            // Initialize level
             useEffect(() => {
                 loadLevel(currentLevelIdx);
             }, [currentLevelIdx]);
+
+            // UPDATED: Dynamic scaling logic
+            useEffect(() => {
+                const handleResize = () => {
+                    const w = window.innerWidth;
+                    // Logic container width is 800px.
+                    // If screen is smaller than 800px (plus margin), scale down.
+                    // Max scale limited to 1.
+                    const newScale = Math.min(1, (w - 32) / 800);
+                    setBoardScale(newScale);
+                };
+                
+                handleResize(); // Initial calc
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
 
             const loadLevel = (idx) => {
                 const { sticks: initSticks, slots: initSlots } = generateSticks(LEVELS[idx]);
@@ -498,21 +468,27 @@
                 setHintLevel(0);
             };
 
-            // Global mouse/touch move for dragging
             useEffect(() => {
                 const handleMove = (e) => {
-                    if (!draggingId) return;
+                    if (!draggingId || !boardRef.current) return;
                     
                     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-                    if (gameAreaRef.current) {
-                        const rect = gameAreaRef.current.getBoundingClientRect();
-                        setMousePos({
-                            x: clientX - rect.left - dragOffset.x,
-                            y: clientY - rect.top - dragOffset.y
-                        });
-                    }
+                    // IMPORTANT: Use the current state scale for calculation
+                    const rect = boardRef.current.getBoundingClientRect();
+                    // We can verify scale from rect if we want, but using state is cleaner for logic if synced
+                    // Actually, rect.width / 800 is the most accurate reflection of current render
+                    const currentScale = rect.width / 800;
+
+                    // Map mouse to internal coordinate system
+                    const mouseX = (clientX - rect.left) / currentScale;
+                    const mouseY = (clientY - rect.top) / currentScale;
+
+                    setMousePos({
+                        x: mouseX - dragOffset.x,
+                        y: mouseY - dragOffset.y
+                    });
                 };
 
                 const handleUp = () => {
@@ -537,41 +513,36 @@
 
             const startDrag = (e, stickId, stickX, stickY) => {
                 if (gameState === 'won') return;
-                e.preventDefault(); // Stop text selection
+                e.preventDefault();
                 
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 
-                if (gameAreaRef.current) {
-                    const rect = gameAreaRef.current.getBoundingClientRect();
-                    const offsetX = clientX - (rect.left + stickX);
-                    const offsetY = clientY - (rect.top + stickY);
+                if (boardRef.current) {
+                    const rect = boardRef.current.getBoundingClientRect();
+                    const scale = rect.width / 800;
                     
-                    setDragOffset({ x: offsetX, y: offsetY });
-                    setMousePos({ x: stickX, y: stickY }); // Initial visual pos
+                    // Map mouse click to internal coordinates to calculate offset
+                    const mouseX = (clientX - rect.left) / scale;
+                    const mouseY = (clientY - rect.top) / scale;
+                    
+                    setDragOffset({ x: mouseX - stickX, y: mouseY - stickY });
+                    setMousePos({ x: stickX, y: stickY });
                     setDraggingId(stickId);
                 }
             };
 
             const snapStick = (stickId, x, y) => {
-                // Find nearest empty slot
                 let nearest = null;
-                let minDist = 50; // Snap threshold
+                let minDist = 50; 
 
-                // Get current stick details
                 const currentStick = sticks.find(s => s.id === stickId);
                 
                 slots.forEach(slot => {
-                    // Calculate distance
                     const dist = Math.sqrt(Math.pow(slot.x - x, 2) + Math.pow(slot.y - y, 2));
-                    
-                    // Check if slot is occupied by ANOTHER stick
                     const isOccupied = sticks.some(s => s.slotId === slot.id && s.id !== stickId);
-                    
-                    // Check rotation match? usually horizontal stick goes to horiz slot.
-                    // Let's enforce rotation match for simplicity, otherwise it looks weird
                     const rotDiff = Math.abs(currentStick.rotation - slot.rotation);
-                    const isRotMatch = rotDiff < 10 || rotDiff > 350; // approx equal
+                    const isRotMatch = rotDiff < 10 || rotDiff > 350; 
 
                     if (dist < minDist && !isOccupied && isRotMatch) {
                         minDist = dist;
@@ -580,7 +551,6 @@
                 });
 
                 if (nearest) {
-                    // Update stick position
                     const newSticks = sticks.map(s => {
                         if (s.id === stickId) {
                             if (s.slotId !== nearest.id) {
@@ -593,7 +563,6 @@
                     setSticks(newSticks);
                     checkWinCondition(newSticks);
                 } else {
-                    // Return to original slot
                     const originalSlot = slots.find(s => s.id === currentStick.slotId);
                     if (originalSlot) {
                         const newSticks = sticks.map(s => s.id === stickId ? { ...s, x: originalSlot.x, y: originalSlot.y } : s);
@@ -603,32 +572,27 @@
             };
 
             const checkWinCondition = (currentSticks) => {
-                // Parse the board
-                const filledSlots = {}; // { partIndex: [segIdx, segIdx...] }
+                const filledSlots = {}; 
                 
                 currentSticks.forEach(s => {
                     const slot = slots.find(sl => sl.id === s.slotId);
                     if (slot) {
                         if (!filledSlots[slot.partIndex]) filledSlots[slot.partIndex] = [];
                         
-                        // Handle special +/- slots
                         if (slot.type === 'plus_vert') filledSlots[slot.partIndex].push('vert');
                         else if (slot.type === 'plus_horiz') filledSlots[slot.partIndex].push('horiz');
                         else filledSlots[slot.partIndex].push(slot.segmentIndex);
                     }
                 });
 
-                // 2. Decode parts
                 const decodedValues = [];
                 const decodedOps = []; 
-                
                 let isMalformed = false;
 
                 currentLevel.layout.forEach((part, idx) => {
                     const segments = filledSlots[idx] || [];
                     
                     if (part.type === 'digit') {
-                        // Find match in DIGIT_MAP
                         let digit = -1;
                         Object.entries(DIGIT_MAP).forEach(([key, val]) => {
                             const a = [...val].sort();
@@ -675,8 +639,7 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col items-center py-6 px-2 overflow-hidden w-full max-w-4xl mx-auto">
-                    {/* Header */}
+                <div className="min-h-screen flex flex-col items-center py-6 px-2 w-full max-w-4xl mx-auto">
                     <div className="w-full flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-lg border-2 border-orange-200">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-orange-600">三十週年：火柴智多星</h1>
@@ -691,40 +654,31 @@
                         </div>
                     </div>
 
-                    {/* Instruction */}
                     <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 w-full rounded shadow-sm">
                         <p className="font-bold">{currentLevel.title}</p>
                         <p>{currentLevel.instruction}</p>
                         <p className="text-sm mt-1 text-gray-500 font-mono">{currentLevel.formula}</p>
                     </div>
 
-                    {/* Game Board */}
                     <div 
                         ref={gameAreaRef}
                         className="relative bg-white rounded-xl shadow-inner border-4 border-orange-300 w-full overflow-hidden"
-                        style={{ height: '300px', touchAction: 'none' }} // Fixed height for area
+                        style={{ height: '300px', touchAction: 'none' }} 
                     >
-                        {/* Grid/Background */}
                         <div className="absolute inset-0 opacity-10" 
                             style={{backgroundImage: 'radial-gradient(#fbbf24 1px, transparent 1px)', backgroundSize: '20px 20px'}}>
                         </div>
 
-                        {/* Rendering Offset Container to Center Content */}
-                        <div style={{ 
-                            position: 'absolute', 
-                            top: '50px', 
-                            left: '50%', 
-                            transform: 'translateX(-50%) scale(0.6) sm:scale(0.8)', // Responsive scaling
-                            width: '800px', // base width of logic
-                            height: '200px'
-                        }} className="transform origin-top md:scale-90 lg:scale-100">
-                            
-                            {/* Slots (Ghosts) */}
+                        {/* UPDATED: Dynamic scale applied via style transform to ensure horizontal fit */}
+                        <div 
+                            ref={boardRef}
+                            className="absolute top-[50px] left-1/2 w-[800px] h-[200px] origin-top"
+                            style={{ transform: `translateX(-50%) scale(${boardScale})` }}
+                        >
                             {slots.map(slot => (
                                 <Slot key={slot.id} {...slot} />
                             ))}
 
-                            {/* Sticks */}
                             {sticks.map(stick => (
                                 <Stick 
                                     key={stick.id}
@@ -737,7 +691,6 @@
                             ))}
                         </div>
                         
-                        {/* Win Overlay */}
                         {gameState === 'won' && (
                             <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
                                 <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-4 border-green-500 transform scale-110">
@@ -755,7 +708,6 @@
                         )}
                     </div>
 
-                    {/* Controls */}
                     <div className="w-full mt-6 grid grid-cols-2 gap-4">
                         <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
                             <div className="flex justify-between items-center mb-2">
