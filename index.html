@@ -128,7 +128,7 @@
             },
             {
                 id: 'm3', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
-                hint1: "試試把加號變減號？", hint2: "8 - 4 = 4 或 0 + 4 = 4。",
+                hint1: "這題有多個解法！試試改變結果，或者把加號變減號？", hint2: "解法：8 - 4 = 4、0 + 4 = 4 或 5 + 4 = 9。",
                 layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 4, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 4, x: 460 }],
                 check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) || (ops[0]==='-' && values[0]-values[1]===values[2])
             },
@@ -250,6 +250,7 @@
             });
 
             const squares = [];
+            // Check for squares of size ~80.
             
             hSticks.forEach(top => {
                 // Find Bottom H (y + 80)
@@ -388,7 +389,11 @@
 
             useEffect(() => { setLevels(generateLevelSet()); }, []);
             const currentLevel = levels.length > 0 ? levels[currentLevelIdx] : null;
-            useEffect(() => { if (currentLevel) loadLevelData(currentLevel); }, [currentLevel]);
+            // FIX: Removed gameState from dependency to prevent reset loop on win
+            useEffect(() => { 
+                if (currentLevel) loadLevelData(currentLevel); 
+            }, [currentLevel]); 
+            
             useEffect(() => {
                 const handleResize = () => setBoardScale(Math.min(1, (window.innerWidth - 32) / 800));
                 handleResize(); window.addEventListener('resize', handleResize);
@@ -399,6 +404,16 @@
                 const { sticks: s, slots: sl, shiftX, shiftY } = generateSticks(levelData);
                 setSticks(s); setSlots(sl); setOffsets({x: shiftX, y: shiftY});
                 setMovesCount(0); setGameState('playing'); setHintLevel(0);
+            };
+            
+            // --- Restart Game Function ---
+            const restartGame = () => {
+                const newLevels = generateLevelSet();
+                setLevels(newLevels);
+                setCurrentLevelIdx(0);
+                setGameState('playing'); // Triggers effect via level change or just reset if same
+                // Force reload if same level 0
+                if(newLevels[0]) loadLevelData(newLevels[0]);
             };
 
             const handleMove = (e) => {
@@ -418,7 +433,7 @@
             }, [draggingId, mousePos, dragOffset]);
 
             const startDrag = (e, stickId, stickX, stickY) => {
-                if (gameState === 'won') return;
+                if (gameState !== 'playing') return;
                 e.preventDefault();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -456,7 +471,6 @@
                 if (currentLevel.checkGeometry === '3_squares' || currentLevel.checkGeometry === '2_squares') {
                     const target = currentLevel.checkGeometry === '3_squares' ? 3 : 2;
                     const sq = getFoundSquares(currentSticks);
-                    // Check if unique squares (by simplified center or top-left)
                     const unique = new Set(sq.map(s => `${Math.round(s.x)},${Math.round(s.y)}`));
                     if (unique.size >= target) {
                         setGameState('won');
@@ -465,7 +479,7 @@
                 } else if (currentLevel.type === 'shape') {
                      // ...
                 } else {
-                    // Math Logic (Existing)
+                    // Math Logic
                     const filledSlots = {};
                     currentSticks.forEach(s => {
                         const slot = slots.find(sl => sl.id === s.slotId);
@@ -509,10 +523,10 @@
             };
 
             const nextLevel = () => {
-                if (currentLevelIdx < levels.length - 1) setCurrentLevelIdx(p => p + 1);
-                else {
-                    alert("恭喜！你已完成所有關卡！30週年快樂！");
-                    setLevels(generateLevelSet()); setCurrentLevelIdx(0);
+                if (currentLevelIdx < levels.length - 1) {
+                    setCurrentLevelIdx(p => p + 1);
+                } else {
+                    setGameState('completed');
                 }
             };
             const resetLevel = () => { if(currentLevel) loadLevelData(currentLevel); };
@@ -524,58 +538,83 @@
                     <div className="w-full flex justify-between items-center mb-4 bg-white/80 backdrop-blur p-4 rounded-xl shadow-lg border-b-4 border-orange-300">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-bold text-orange-700 tracking-wider">「柴」高三十斗</h1>
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">關卡 {currentLevelIdx + 1}/{levels.length}</span>
-                                {currentLevel.id.startsWith('sp') && <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm animate-pulse">30週年特別題</span>}
-                                {currentLevel.type === 'shape' && <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">圖形挑戰</span>}
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-gray-500 text-xs font-bold uppercase tracking-widest">移動次數</div>
-                            <div className="text-3xl font-black text-gray-700">{movesCount}</div>
-                        </div>
-                    </div>
-                    <div className={`border-l-8 p-6 mb-6 w-full rounded-lg shadow-md ${currentLevel.type === 'shape' ? 'bg-blue-50 border-blue-400 text-blue-900' : 'bg-[#fcf8e3] border-yellow-400 text-yellow-800'}`}>
-                        <div className="text-lg font-bold mb-1">{currentLevel.title}</div>
-                        <div className="text-xl mb-2">{currentLevel.instruction}</div>
-                        <div className="text-2xl font-mono bg-white/50 inline-block px-4 py-2 rounded border shadow-inner tracking-widest opacity-80">{currentLevel.formula}</div>
-                    </div>
-                    <div ref={gameAreaRef} className="relative bg-[#eeeadd] rounded-xl shadow-inner border-4 border-[#d1cbb8] w-full overflow-hidden" style={{ height: '320px', touchAction: 'none' }}>
-                        <div className="absolute inset-0 paper-texture"></div>
-                        <div ref={boardRef} className="absolute top-[50px] left-1/2 w-[800px] h-[200px] origin-top" style={{ transform: `translateX(-50%) scale(${boardScale})` }}>
-                            {slots.map(slot => ( <Slot key={slot.id} x={slot.x} y={slot.y} rotation={slot.r} /> ))}
-                            {sticks.map(stick => ( <Stick key={stick.id} x={draggingId === stick.id ? mousePos.x : stick.x} y={draggingId === stick.id ? mousePos.y : stick.y} rotation={stick.rotation} isDragging={draggingId === stick.id} onMouseDown={(e) => startDrag(e, stick.id, stick.x, stick.y)} /> ))}
-                        </div>
-                        {gameState === 'won' && (
-                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-                                <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-b-8 border-green-500 transform scale-110">
-                                    <div className="text-7xl mb-4 float-anim">🎉</div>
-                                    <h2 className="text-4xl font-black text-green-600 mb-2 tracking-tight">答案正確！</h2>
-                                    <button onClick={nextLevel} className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full text-2xl shadow-lg transform transition hover:scale-105 active:scale-95 flex items-center gap-3 mx-auto">下一關 ➜</button>
+                            {gameState !== 'completed' && (
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">關卡 {currentLevelIdx + 1}/{levels.length}</span>
+                                    {currentLevel.id.startsWith('sp') && <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm animate-pulse">30週年特別題</span>}
+                                    {currentLevel.type === 'shape' && <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold shadow-sm">圖形挑戰</span>}
                                 </div>
+                            )}
+                        </div>
+                        {gameState !== 'completed' && (
+                            <div className="text-right">
+                                <div className="text-gray-500 text-xs font-bold uppercase tracking-widest">移動次數</div>
+                                <div className="text-3xl font-black text-gray-700">{movesCount}</div>
                             </div>
                         )}
                     </div>
-                    <div className="w-full mt-6 grid grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="font-bold text-gray-700 flex items-center gap-2"><span className="text-xl">💡</span> 提示</h3>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setHintLevel(1)} disabled={hintLevel >= 1 || gameState === 'won'} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${hintLevel >= 1 ? 'bg-gray-100 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}>LV 1</button>
-                                    <button onClick={() => setHintLevel(2)} disabled={hintLevel >= 2 || gameState === 'won'} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${hintLevel >= 2 ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}>LV 2</button>
+                    
+                    {gameState === 'completed' ? (
+                        <div className="flex-1 flex flex-col items-center justify-center w-full">
+                            <div className="bg-white p-12 rounded-3xl shadow-2xl text-center border-8 border-yellow-400 max-w-lg w-full transform transition-all animate-bounce-slow">
+                                <div className="text-8xl mb-6">🏆</div>
+                                <h2 className="text-5xl font-black text-yellow-500 mb-4 tracking-tight">成功過關!</h2>
+                                <p className="text-gray-500 mb-10 text-xl font-medium">恭喜你完成了所有挑戰！</p>
+                                <button 
+                                    onClick={restartGame}
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-5 px-12 rounded-full text-2xl shadow-xl transform transition hover:scale-110 active:scale-95 w-full flex items-center justify-center gap-3"
+                                >
+                                    <span>🔄</span> 再來一次
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className={`border-l-8 p-6 mb-6 w-full rounded-lg shadow-md ${currentLevel.type === 'shape' ? 'bg-blue-50 border-blue-400 text-blue-900' : 'bg-[#fcf8e3] border-yellow-400 text-yellow-800'}`}>
+                                <div className="text-lg font-bold mb-1">{currentLevel.title}</div>
+                                <div className="text-xl mb-2">{currentLevel.instruction}</div>
+                                <div className="text-2xl font-mono bg-white/50 inline-block px-4 py-2 rounded border shadow-inner tracking-widest opacity-80">{currentLevel.formula}</div>
+                            </div>
+                            <div ref={gameAreaRef} className="relative bg-[#eeeadd] rounded-xl shadow-inner border-4 border-[#d1cbb8] w-full overflow-hidden" style={{ height: '320px', touchAction: 'none' }}>
+                                <div className="absolute inset-0 paper-texture"></div>
+                                <div ref={boardRef} className="absolute top-[50px] left-1/2 w-[800px] h-[200px] origin-top" style={{ transform: `translateX(-50%) scale(${boardScale})` }}>
+                                    {slots.map(slot => ( <Slot key={slot.id} x={slot.x} y={slot.y} rotation={slot.r} /> ))}
+                                    {sticks.map(stick => ( <Stick key={stick.id} x={draggingId === stick.id ? mousePos.x : stick.x} y={draggingId === stick.id ? mousePos.y : stick.y} rotation={stick.rotation} isDragging={draggingId === stick.id} onMouseDown={(e) => startDrag(e, stick.id, stick.x, stick.y)} /> ))}
+                                </div>
+                                {gameState === 'won' && (
+                                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                                        <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-b-8 border-green-500 transform scale-110">
+                                            <div className="text-7xl mb-4 float-anim">🎉</div>
+                                            <h2 className="text-4xl font-black text-green-600 mb-2 tracking-tight">答案正確！</h2>
+                                            <button onClick={nextLevel} className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full text-2xl shadow-lg transform transition hover:scale-105 active:scale-95 flex items-center gap-3 mx-auto">
+                                                {currentLevelIdx < levels.length - 1 ? "下一關 ➜" : "領取獎勵 ➜"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="w-full mt-6 grid grid-cols-2 gap-4">
+                                <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-100">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h3 className="font-bold text-gray-700 flex items-center gap-2"><span className="text-xl">💡</span> 提示</h3>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setHintLevel(1)} disabled={hintLevel >= 1 || gameState === 'won'} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${hintLevel >= 1 ? 'bg-gray-100 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}>LV 1</button>
+                                            <button onClick={() => setHintLevel(2)} disabled={hintLevel >= 2 || gameState === 'won'} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${hintLevel >= 2 ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`}>LV 2</button>
+                                        </div>
+                                    </div>
+                                    <div className="min-h-[3rem] text-sm text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100 leading-relaxed">
+                                        {hintLevel === 0 && "如果在解題時遇到困難，可以按上方按鈕獲得提示。"}
+                                        {hintLevel >= 1 && (<div className="animate-pulse text-blue-700 font-medium mb-2 flex items-start gap-2"><span>🔹</span> {currentLevel.hint1}</div>)}
+                                        {hintLevel >= 2 && (<div className="text-purple-700 font-bold flex items-start gap-2"><span>🔸</span> {currentLevel.hint2}</div>)}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <button onClick={resetLevel} className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-xl border-b-4 border-gray-200 active:border-b-0 active:translate-y-1 transition flex items-center justify-center gap-2 shadow-sm">🔄 重置本關</button>
+                                    <button onClick={nextLevel} className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl border-b-4 border-red-200 active:border-b-0 active:translate-y-1 transition flex items-center justify-center gap-2 shadow-sm">⏩ 跳過本關</button>
                                 </div>
                             </div>
-                            <div className="min-h-[3rem] text-sm text-gray-600 bg-gray-50 p-4 rounded-lg border border-gray-100 leading-relaxed">
-                                {hintLevel === 0 && "如果在解題時遇到困難，可以按上方按鈕獲得提示。"}
-                                {hintLevel >= 1 && (<div className="animate-pulse text-blue-700 font-medium mb-2 flex items-start gap-2"><span>🔹</span> {currentLevel.hint1}</div>)}
-                                {hintLevel >= 2 && (<div className="text-purple-700 font-bold flex items-start gap-2"><span>🔸</span> {currentLevel.hint2}</div>)}
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <button onClick={resetLevel} className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-xl border-b-4 border-gray-200 active:border-b-0 active:translate-y-1 transition flex items-center justify-center gap-2 shadow-sm">🔄 重置本關</button>
-                            <button onClick={nextLevel} className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-3 rounded-xl border-b-4 border-red-200 active:border-b-0 active:translate-y-1 transition flex items-center justify-center gap-2 shadow-sm">⏩ 跳過本關</button>
-                        </div>
-                    </div>
+                        </>
+                    )}
                 </div>
             );
         };
