@@ -23,10 +23,11 @@
         }
         
         .stick-shadow {
-            /* Classic offset shadow that worked well with top-left positioning */
+            /* Standard shadow for top-left positioning */
             filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.2));
         }
         
+        /* Dashed slot styling */
         .slot-dash {
             border: 2px dashed rgba(0,0,0,0.15);
         }
@@ -40,6 +41,7 @@
             animation: float 3s ease-in-out infinite;
         }
 
+        /* Paper texture overlay */
         .paper-texture {
             background-image: radial-gradient(#a39e93 1px, transparent 1px);
             background-size: 20px 20px;
@@ -63,8 +65,8 @@
             return newArray;
         };
 
-        // --- Configuration (CLASSIC TOP-LEFT PIVOT) ---
-        // Sticks are 80x10. Pivot is at 5px 5px.
+        // --- Configuration (CLASSIC ALIGNMENT from fix.txt) ---
+        // Stick size 80x10. Transform Origin 5px 5px.
         
         const SEG_TOP = [20, 0, 0];
         const SEG_TL  = [10, 20, 90];
@@ -91,7 +93,7 @@
             SEG_TOP, SEG_TL, SEG_TR, SEG_MID, SEG_BL, SEG_BR, SEG_BOT
         ];
 
-        // Operators
+        // Operators (Classic)
         const OP_PLUS = [
             [40, 50, 90], // Vertical
             [10, 80, 0]   // Horizontal
@@ -99,22 +101,10 @@
         const OP_MINUS = [[10, 80, 0]];
         const OP_EQUAL = [[10, 65, 0], [10, 95, 0]];
 
-        // --- VALIDATION HELPER ---
-        const checkMath = (values, ops) => {
-            if (values.length === 3 && ops.length === 1) {
-                const res = ops[0] === '+' ? values[0] + values[1] : values[0] - values[1];
-                return res === values[2];
-            } 
-            return false;
-        };
-
-        // --- COORDINATE CONVERSION FOR SHAPES ---
-        // Convert "Center Geometry" to "Top-Left Pivot (5,5)" Geometry
-        // Stick Length 80. Center is at local (40, 5). Pivot at (5, 5).
-        // Vector from Pivot to Center is (35, 0) in local stick space.
-        // Rotated Vector: dx = 35 * cos(r), dy = 35 * sin(r).
-        // Center (cx, cy) = Pivot (px, py) + (dx, dy)
-        // => Pivot (px, py) = Center (cx, cy) - (dx, dy)
+        // --- COORDINATE CONVERTER FOR SHAPES ---
+        // Converts "Geometric Center" to "Top-Left Pivot (5,5)" coordinates.
+        // Stick 80x10. Center is (40, 5) relative to stick. Pivot is (5, 5).
+        // Vector Pivot->Center is (35, 0) in local space.
         const centerToPivot = (cx, cy, r) => {
             const rad = r * Math.PI / 180;
             return {
@@ -124,22 +114,12 @@
             };
         };
 
-        // Reuse precise shape centers from previous step, but convert them for the engine
         const SL = 80;
-        const DIAG = 56; // 80*sin(45)
-        
-        // Define shapes using CENTERS first (easier geometry), then convert
-        const FISH_CENTERS = [
-            // Body Diamond (Center approx 400, 150)
-            {cx:400, cy:100, r:45}, {cx:400+DIAG, cy:100+DIAG, r:135},
-            {cx:400, cy:100+2*DIAG, r:225}, {cx:400-DIAG, cy:100+DIAG, r:315},
-            // Tail
-            {cx:400+DIAG, cy:100+DIAG, r:315}, {cx:400+DIAG, cy:100+DIAG, r:45},
-            // Fins
-            {cx:400, cy:100, r:225}, {cx:400, cy:100+2*DIAG, r:135}
-        ];
+        const DIAG = 56; // 80 * sin(45)
 
-        // POOLS
+        // --- POOLS ---
+
+        // 1. Math Pool
         const POOL_MATH = [
             {
                 id: 'm1', type: 'math', title: "熱身題", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 5 = 8",
@@ -160,80 +140,54 @@
                 check: (values, ops) => checkMath(values, ops)
             },
             {
-                id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
+                id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 9 = 9", 
+                hint1: "5 變成 0。", hint2: "把 5 的中間火柴移到右上角。",
+                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 9, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 9, x: 460 }],
+                check: (values, ops) => checkMath(values, ops)
+            },
+            {
+                id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
                 hint1: "減法變加法？", hint2: "把 9 變成 3，減號變加號。",
                 layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
                 check: (values, ops) => checkMath(values, ops)
             },
             {
-                id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
-                hint1: "加法變減法？", hint2: "把加號的一根火柴移到 5 上，讓它變成 9。",
-                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
+                id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
+                hint1: "3 變大一點？", hint2: "把加號變成減號，把直的那根放到 3 上變成 9。",
+                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
                 check: (values, ops) => checkMath(values, ops)
             },
             {
-                id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
-                hint1: "試試看 3 加 0。", hint2: "把 6 變成 0。",
-                layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
+                id: 'm7', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
+                hint1: "加法變減法？", hint2: "把加號的直火柴移到 5 上，變成 9。",
+                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
                 check: (values, ops) => checkMath(values, ops)
             }
         ];
 
+        // 2. Shape Pool (Restored with accurate geometry)
+        // Removed Fish and Arrows as requested.
         const POOL_SHAPE = [
-            {
-                id: 's1', type: 'shape', title: "游動的小魚", instruction: "移動 3 根火柴，讓魚向反方向游",
-                formula: "圖形題",
-                hint1: "魚頭現在向左，要把它變向右。", hint2: "移動魚鰭和下半部的身體。",
-                customSticks: FISH_CENTERS.map(c => centerToPivot(c.cx, c.cy, c.r)),
-                winSlots: FISH_CENTERS.map(c => centerToPivot(c.cx, c.cy, c.r)), // Simplified win check for same shape logic
-                validSlots: [
-                    ...FISH_CENTERS.map(c => centerToPivot(c.cx, c.cy, c.r)), // Current
-                    // Mirror for solution (Fish Right)
-                    // Simplified: just providing ample valid slots
-                    ...FISH_CENTERS.map(c => centerToPivot(c.cx + 20, c.cy, 360-c.r)) // Approximate mirror
-                ]
-            },
-            // Arrows: > >
-            {
-                id: 's2', type: 'shape', title: "兩個箭頭", instruction: "移動 2 根火柴，把兩個箭頭變成一個正方形",
-                formula: "圖形題",
-                hint1: "將兩個箭頭的尾部連起來。", hint2: "這是一個視錯覺，不需要完美的正方形，長方形(Box)也可以。",
-                customSticks: [
-                    // Arrow 1 (Left) Center approx 220, 120
-                    centerToPivot(220, 100, 45), centerToPivot(220, 100+DIAG*2, 315),
-                    // Arrow 2 (Right)
-                    centerToPivot(300, 100, 45), centerToPivot(300, 100+DIAG*2, 315)
-                ],
-                winSlots: [
-                    // Box
-                    centerToPivot(260, 100+DIAG/2, 0), centerToPivot(260, 100+1.5*DIAG, 0),
-                    centerToPivot(220, 100+DIAG, 90), centerToPivot(300, 100+DIAG, 90)
-                ],
-                validSlots: [] // Will be auto-populated
-            },
             {
                 id: 's3', type: 'shape', title: "三個正方形", instruction: "移動 2 根火柴，把三個正方形變成兩個正方形",
                 formula: "圖形題",
                 hint1: "試著把中間的正方形拆掉。", hint2: "把中間正方形的兩根直火柴拿走，放到哪裡呢？補上缺口。",
-                // Grid: 80px. Start 100,100.
                 customSticks: [
-                    // Top: 140, 220, 300
-                    centerToPivot(140, 100, 0), centerToPivot(220, 100, 0), centerToPivot(300, 100, 0),
-                    // Bot: 140, 220, 300
-                    centerToPivot(140, 180, 0), centerToPivot(220, 180, 0), centerToPivot(300, 180, 0),
-                    // Verts: 100, 180, 260, 340
-                    centerToPivot(100, 140, 90), centerToPivot(180, 140, 90), centerToPivot(260, 140, 90), centerToPivot(340, 140, 90)
-                ],
+                    {cx:140, cy:100, r:0}, {cx:220, cy:100, r:0}, {cx:300, cy:100, r:0},
+                    {cx:140, cy:180, r:0}, {cx:220, cy:180, r:0}, {cx:300, cy:180, r:0},
+                    {cx:100, cy:140, r:90}, {cx:180, cy:140, r:90}, {cx:260, cy:140, r:90}, {cx:340, cy:140, r:90}
+                ].map(s => centerToPivot(s.cx, s.cy, s.r)),
                 winSlots: [
-                    // Left Square
-                    centerToPivot(140, 100, 0), centerToPivot(140, 180, 0), centerToPivot(100, 140, 90), centerToPivot(180, 140, 90),
-                    // Right Square
-                    centerToPivot(380, 100, 0), centerToPivot(380, 180, 0), centerToPivot(340, 140, 90), centerToPivot(420, 140, 90)
-                ],
-                validSlots: []
+                    {cx:140, cy:100, r:0}, {cx:140, cy:180, r:0}, {cx:100, cy:140, r:90}, {cx:180, cy:140, r:90},
+                    {cx:340, cy:100, r:0}, {cx:340, cy:180, r:0}, {cx:340, cy:140, r:90}, {cx:420, cy:140, r:90}
+                ].map(s => centerToPivot(s.cx, s.cy, s.r)),
+                validSlots: [
+                   {cx:340, cy:100, r:0}, {cx:340, cy:180, r:0}, {cx:420, cy:140, r:90}
+                ].map(s => centerToPivot(s.cx, s.cy, s.r))
             }
         ];
 
+        // 3. Special Pool (30th)
         const POOL_SPECIAL = [
             {
                 id: 'sp1', type: 'math', title: "三十而立 (一)", instruction: "移動 1 根火柴，使結果等於 30", formula: "26 + 4 = 20",
@@ -268,8 +222,11 @@
         ];
 
         const generateLevelSet = () => {
-            const math = shuffleArray(POOL_MATH).slice(0, 4);
-            const shape = shuffleArray(POOL_SHAPE).slice(0, 2);
+            // Select 5 random Math levels from the pool of 7
+            const math = shuffleArray(POOL_MATH).slice(0, 5);
+            // Select 1 random Shape levels (Now only 1 available)
+            const shape = shuffleArray(POOL_SHAPE).slice(0, 1);
+            // Select 4 random Special levels
             const special = shuffleArray(POOL_SPECIAL).slice(0, 4);
             return [...math, ...shape, ...special];
         };
@@ -277,15 +234,20 @@
         const calculateBounds = (items) => {
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             items.forEach(item => {
-                // Approximate bounding box for stick based on pivot
-                // Stick goes from (x,y) to (x+80*cos, y+80*sin) roughly
+                // Approximate visual bounds based on pivot logic
                 const rad = item.r * Math.PI / 180;
-                const x2 = item.x + 80 * Math.cos(rad);
-                const y2 = item.y + 80 * Math.sin(rad);
-                minX = Math.min(minX, item.x, x2);
-                maxX = Math.max(maxX, item.x, x2);
-                minY = Math.min(minY, item.y, y2);
-                maxY = Math.max(maxY, item.y, y2);
+                // Stick is 80x10. Pivot at 5,5.
+                const corners = [
+                    {x: -5, y: -5}, {x: 75, y: -5}, {x: -5, y: 5}, {x: 75, y: 5}
+                ];
+                corners.forEach(c => {
+                    const rx = c.x * Math.cos(rad) - c.y * Math.sin(rad);
+                    const ry = c.x * Math.sin(rad) + c.y * Math.cos(rad);
+                    minX = Math.min(minX, item.x + rx);
+                    maxX = Math.max(maxX, item.x + rx);
+                    minY = Math.min(minY, item.y + ry);
+                    maxY = Math.max(maxY, item.y + ry);
+                });
             });
             return { minX, maxX, minY, maxY };
         };
@@ -294,15 +256,12 @@
             let sticks = [];
             let slots = [];
             let idCounter = 0;
+            
             let rawItems = [];
-
             if (levelData.type === 'shape') {
-                rawItems = levelData.customSticks.map(s => ({...s, type: 'stick'}));
-                // Auto generate matching slots for initial sticks
-                rawItems = [...rawItems, ...rawItems.map(s => ({...s, type: 'slot'}))];
-                // Add valid slots
-                if(levelData.winSlots) rawItems = [...rawItems, ...levelData.winSlots.map(s => ({...s, type: 'slot'}))];
-                if(levelData.validSlots) rawItems = [...rawItems, ...levelData.validSlots.map(s => ({...s, type: 'slot'}))];
+                rawItems = [...levelData.customSticks.map(s => ({...s, type: 'stick'})), 
+                            ...(levelData.validSlots || []).map(s => ({...s, type: 'slot'})),
+                            ...(levelData.winSlots || []).map(s => ({...s, type: 'slot'}))];
             } else {
                 levelData.layout.forEach((part, partIndex) => {
                     let baseX = part.x; 
@@ -337,6 +296,7 @@
             const contentH = bounds.maxY - bounds.minY;
             const containerW = 800;
             const containerH = 320;
+            
             const shiftX = Math.round((containerW - contentW) / 2 - bounds.minX);
             const shiftY = Math.round((containerH - contentH) / 2 - bounds.minY);
 
@@ -364,7 +324,6 @@
                 if (item.type === 'stick') {
                     const sx = Math.round(item.x + shiftX);
                     const sy = Math.round(item.y + shiftY);
-                    // Ensure a slot exists for every stick (visual consistency)
                     const slotId = addSlot(item);
                     sticks.push({
                         id: `stick_${idCounter++}`,
@@ -383,7 +342,9 @@
                 style={{
                     position: 'absolute', left: x, top: y, width: '80px', height: '10px',
                     backgroundColor: isDragging ? '#fbbf24' : '#d97706', borderRadius: '5px',
-                    transform: `rotate(${rotation}deg)`, transformOrigin: '5px 5px', cursor: 'pointer',
+                    transform: `rotate(${rotation}deg)`, 
+                    transformOrigin: '5px 5px',
+                    cursor: 'pointer',
                     zIndex: isDragging ? 50 : 10, touchAction: 'none'
                 }}
                 className={`flex items-center ${isDragging ? 'shadow-2xl scale-110' : 'stick-shadow'} transition-transform duration-100`}
@@ -393,11 +354,14 @@
             </div>
         );
 
-        const Slot = ({ x, y, rotation, isShape }) => (
-            <div className={isShape ? "slot-dash" : "bg-black/5"}
+        const Slot = ({ x, y, rotation }) => (
+            <div className="slot-dash"
                 style={{
                     position: 'absolute', left: x, top: y, width: '80px', height: '10px',
-                    borderRadius: '5px', transform: `rotate(${rotation}deg)`, transformOrigin: '5px 5px', zIndex: 1
+                    borderRadius: '5px', 
+                    transform: `rotate(${rotation}deg)`, 
+                    transformOrigin: '5px 5px',
+                    zIndex: 1
                 }}
             ></div>
         );
@@ -508,11 +472,11 @@
                     let matchCount = 0;
                     if(!currentLevel.winSlots) return; 
                     
-                    const winSlotPivots = currentLevel.winSlots.map(ws => centerToPivot(ws.cx, ws.cy, ws.r));
+                    const winSlotPivots = currentLevel.winSlots.map(ws => centerToPivot(ws.x, ws.y, ws.r));
                     
                     winSlotPivots.forEach(ws => {
-                        const targetX = ws.x + offsets.x;
-                        const targetY = ws.y + offsets.y;
+                        const targetX = Math.round(ws.x + offsets.x);
+                        const targetY = Math.round(ws.y + offsets.y);
                         
                         const hasStick = currentSticks.some(s => 
                             Math.abs(s.x - targetX) < 15 && 
@@ -522,7 +486,6 @@
                         if (hasStick) matchCount++;
                     });
 
-                    // Flexible win: if match count is sufficient
                     if (matchCount >= winSlotPivots.length) {
                         setGameState('won');
                         new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg').play().catch(e=>{});
