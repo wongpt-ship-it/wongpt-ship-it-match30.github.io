@@ -20,6 +20,7 @@
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden; /* Prevent body scroll */
+            overscroll-behavior: none;
         }
         
         .stick-shadow {
@@ -250,7 +251,6 @@
             });
 
             const squares = [];
-            // Check for squares of size ~80.
             
             hSticks.forEach(top => {
                 // Find Bottom H (y + 80)
@@ -479,7 +479,7 @@
                 } else if (currentLevel.type === 'shape') {
                      // ...
                 } else {
-                    // Math Logic
+                    // Math Logic (Existing)
                     const filledSlots = {};
                     currentSticks.forEach(s => {
                         const slot = slots.find(sl => sl.id === s.slotId);
