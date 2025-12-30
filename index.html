@@ -113,49 +113,47 @@
 
         // --- POOLS ---
 
-        // 1. Math Pool
+        // 1. Math Pool (Updated with new requests)
         const POOL_MATH = [
+            // Question 1: 5 - 1 = 8 -> 5 + 1 = 6 (Move 8's TR to -)
             {
-                id: 'm1', type: 'math', title: "熱身題", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 5 = 8",
-                hint1: "8 不需要變動，試著改變其中一個 5。", hint2: "把第一個 5 的左上角火柴移到右上角，變成 3。",
-                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
-                check: (values, ops) => values[0]+values[1]===values[2]
+                id: 'm1', type: 'math', title: "運算挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "5 - 1 = 8",
+                hint1: "結果 8 太大了。", hint2: "把 8 的右上角火柴移到減號上，變成加號。",
+                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 1, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
+                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) // 5+1=6
             },
+            // Question 2: 9 - 0 = 5 -> 5 + 0 = 5 (Move 9's TR to -)
             {
-                id: 'm2', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "9 + 3 = 6",
-                hint1: "嘗試把 9 變小。", hint2: "把 9 變成 5，變成 5+3=8。",
-                layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 3, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 6, x: 460 }],
-                check: (values, ops) => values[0]+values[1]===values[2]
+                id: 'm2', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 0 = 5",
+                hint1: "把 9 變小，減法變加法。", hint2: "把 9 的右上角火柴移到減號上，變成 5 + 0 = 5。",
+                layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 0, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 5, x: 460 }],
+                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) // 5+0=5
             },
+            // Question 3: 7 - 7 = 8 -> 1 + 7 = 8 (Move 1st 7's Top to -)
             {
-                id: 'm3', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
+                id: 'm3', type: 'math', title: "加減變換", instruction: "移動 1 根火柴，使等式成立", formula: "7 - 7 = 8",
+                hint1: "減法變加法？", hint2: "把第一個 7 的頂部火柴移到減號上。",
+                layout: [{ type: 'digit', value: 7, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
+                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) // 1+7=8
+            },
+            // Keep classic ones for variety
+            {
+                id: 'm4', type: 'math', title: "經典題", instruction: "移動 1 根火柴，使等式成立", formula: "6 + 4 = 4",
                 hint1: "這題有多個解法！試試改變結果，或者把加號變減號？", hint2: "解法：8 - 4 = 4、0 + 4 = 4 或 5 + 4 = 9。",
                 layout: [{ type: 'digit', value: 6, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 4, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 4, x: 460 }],
                 check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2]) || (ops[0]==='-' && values[0]-values[1]===values[2])
             },
             {
-                id: 'm4', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 9 = 9", 
-                hint1: "5 變成 0。", hint2: "把 5 的中間火柴移到右上角。",
-                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 9, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 9, x: 460 }],
-                check: (values, ops) => values[0]+values[1]===values[2]
-            },
-            {
-                id: 'm5', type: 'math', title: "減法挑戰", instruction: "移動 1 根火柴，使等式成立", formula: "9 - 5 = 8", 
-                hint1: "減法變加法？", hint2: "3 + 5 = 8。",
-                layout: [{ type: 'digit', value: 9, x: 0 }, { type: 'op', value: '-', x: 130 }, { type: 'digit', value: 5, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 8, x: 460 }],
-                check: (values, ops) => (ops[0]==='+' && values[0]+values[1]===values[2])
-            },
-            {
-                id: 'm6', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
+                id: 'm5', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "3 + 6 = 3",
                 hint1: "試試看 9 - 6 = 3。", hint2: "把加號變成減號。",
                 layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 6, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 3, x: 460 }],
                 check: (values, ops) => (ops[0]==='-' && values[0]-values[1]===values[2])
             },
             {
-                id: 'm7', type: 'math', title: "加減法", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 7 = 2",
-                hint1: "9 - 7 = 2。", hint2: "把加號的直火柴移到 5 上。",
-                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 7, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 2, x: 460 }],
-                check: (values, ops) => (ops[0]==='-' && values[0]-values[1]===values[2])
+                id: 'm6', type: 'math', title: "數字變身", instruction: "移動 1 根火柴，使等式成立", formula: "5 + 9 = 9", 
+                hint1: "5 變成 0。", hint2: "把 5 的中間火柴移到右上角。",
+                layout: [{ type: 'digit', value: 5, x: 0 }, { type: 'op', value: '+', x: 130 }, { type: 'digit', value: 9, x: 230 }, { type: 'op', value: '=', x: 360 }, { type: 'digit', value: 9, x: 460 }],
+                check: (values, ops) => values[0]+values[1]===values[2]
             }
         ];
 
@@ -228,7 +226,8 @@
             { id: 'sp2', type: 'math', title: "三十而立 (二)", instruction: "移動 1 根火柴，使結果等於 30", formula: "36 - 6 = 36", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 6, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 6, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
             { id: 'sp3', type: 'math', title: "三十而立 (三)", instruction: "移動 1 根火柴，使結果等於 30", formula: "35 - 5 = 39", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 5, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 9, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
             { id: 'sp4', type: 'math', title: "三十而立 (四)", instruction: "移動 1 根火柴，使等式成立", formula: "39 - 9 = 36", layout: [{ type: 'digit', value: 3, x: 0 }, { type: 'digit', value: 9, x: 100 }, { type: 'op', value: '-', x: 220 }, { type: 'digit', value: 9, x: 310 }, { type: 'op', value: '=', x: 430 }, { type: 'digit', value: 3, x: 510 }, { type: 'digit', value: 6, x: 610 }], check: (values, ops) => (values[0]*10+values[1])-values[2]===30 },
-            { id: 'sp5', type: 'math', title: "三十週年 (終極)", instruction: "移動 1 根火柴，使結果等於 30", formula: "15 + 15 = 50", layout: [{ type: 'digit', value: 1, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 1, x: 310 }, { type: 'digit', value: 5, x: 410 }, { type: 'op', value: '=', x: 530 }, { type: 'digit', value: 5, x: 610 }, { type: 'digit', value: 0, x: 710 }], check: (values, ops) => (values[0]*10+values[1])+(values[2]*10+values[3])===30 }
+            // STRICT CHECK: Ensure result is exactly 30 (3 and 0) and Left Sum is 30
+            { id: 'sp5', type: 'math', title: "三十週年 (終極)", instruction: "移動 1 根火柴，使結果等於 30", formula: "15 + 15 = 50", layout: [{ type: 'digit', value: 1, x: 0 }, { type: 'digit', value: 5, x: 100 }, { type: 'op', value: '+', x: 220 }, { type: 'digit', value: 1, x: 310 }, { type: 'digit', value: 5, x: 410 }, { type: 'op', value: '=', x: 530 }, { type: 'digit', value: 5, x: 610 }, { type: 'digit', value: 0, x: 710 }], check: (values, ops) => values.length===6 && values[4]===3 && values[5]===0 && (values[0]*10+values[1])+(values[2]*10+values[3])===30 }
         ];
 
         const generateLevelSet = () => {
@@ -479,7 +478,7 @@
                 } else if (currentLevel.type === 'shape') {
                      // ...
                 } else {
-                    // Math Logic (Existing)
+                    // Math Logic
                     const filledSlots = {};
                     currentSticks.forEach(s => {
                         const slot = slots.find(sl => sl.id === s.slotId);
@@ -500,6 +499,12 @@
                                 const a = [...val].sort(), b = [...segments].sort();
                                 if (JSON.stringify(a) === JSON.stringify(b)) digit = parseInt(key);
                             });
+                            // Fix for 5+4=9: Allow 9 without bottom segment
+                            if (digit === -1) {
+                                const b = [...segments].sort();
+                                if (JSON.stringify(b) === JSON.stringify([0, 1, 2, 3, 5])) digit = 9;
+                            }
+                            
                             if (digit !== -1) decodedValues.push(digit); else isMalformed = true;
                         } else if (part.type === 'op') {
                             if (part.value === '=') { if (segments.length !== 2) isMalformed = true; }
